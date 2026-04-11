@@ -1,0 +1,33 @@
+# Trigger: issue opened with the minesweeper room template.
+# Action: initialize a game room and post the first board.
+
+name: Minesweeper Room Open
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  init-room:
+    if: contains(github.event.issue.labels.*.name, 'game:minesweeper')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Initialize room
+        run: |
+          PYTHONPATH=src python -c "
+          from minesweeper.entrypoints import room_open_entrypoint
+          room_open_entrypoint()
+          "
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MINESWEEPER_SECRET: ${{ secrets.MINESWEEPER_SECRET }}

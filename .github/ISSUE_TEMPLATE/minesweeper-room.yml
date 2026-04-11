@@ -1,0 +1,21 @@
+name: "Minesweeper Room"
+description: "Start a new Minesweeper game room"
+title: "Minesweeper Room"
+labels:
+  - "game:minesweeper"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **A new Minesweeper room will be created for you.**
+
+        Once you submit this issue, a bot will post a fresh 9x9 board.
+        Play by commenting commands:
+
+        - `/reveal B3` — reveal a cell
+        - `/flag H7` — flag a suspected mine
+        - `/unflag H7` — remove a flag
+        - `/chord C4` — chord-reveal around a numbered cell
+        - `/giveup` — end the game
+
+        Only you (the issue opener) can play in this room.

@@ -1,0 +1,25 @@
+{
+  "_comment": "Fixture: final reveal that wins the game — all safe cells revealed",
+  "action": "created",
+  "issue": {
+    "number": 1,
+    "title": "Minesweeper Room",
+    "user": {
+      "login": "testplayer"
+    },
+    "labels": [{"name": "game:minesweeper"}]
+  },
+  "comment": {
+    "id": 199,
+    "user": {
+      "login": "testplayer"
+    },
+    "body": "/reveal I9"
+  },
+  "repository": {
+    "full_name": "testowner/github-issue-minesweeper"
+  },
+  "sender": {
+    "login": "testplayer"
+  }
+}
