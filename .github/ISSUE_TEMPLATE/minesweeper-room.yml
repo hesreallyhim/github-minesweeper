@@ -19,3 +19,24 @@ body:
         - `/giveup` — end the game
 
         Only you (the issue opener) can play in this room.
+  
+  - type: checkboxes
+    id: conduct
+    title: "Conduct"
+    attributes:
+      description: "I have read the CODE_OF_CONDUCT and agree to respect the rules of the repository"
+      required: true
+    validations:
+      required: true
+
+
+  - type: checkboxes
+    id: conduct
+    attributes:
+      label: Code of Conduct
+      description: By participating, you agree to follow our [Code of Conduct](https://github.com/hesreallyhim/).
+      options:
+        - label: I have read the Code of Conduct and agree to respect the rules and standards of this repository.
+          required: true
+      validations:
+        required: true
