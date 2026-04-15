@@ -24,13 +24,13 @@ body:
         Please only keep one open issue at a time. 
 
 
-  - type: checkboxes
-    id: conduct
-    attributes:
-      label: Code of Conduct
-      description: By participating, you agree to follow our [Code of Conduct](https://github.com/hesreallyhim/).
-      options:
-        - label: I have read the Code of Conduct and agree to respect the rules and standards of this repository.
+    - type: checkboxes
+      id: conduct
+      attributes:
+        label: Code of Conduct
+        description: By participating, you agree to follow our [Code of Conduct](https://github.com/hesreallyhim/).
+        options:
+          - label: I have read the Code of Conduct and agree to respect the rules and standards of this repository.
+            required: true
+        validations:
           required: true
-      validations:
-        required: true
