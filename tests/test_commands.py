@@ -54,6 +54,39 @@ class TestParseCommand:
         assert cmd.action == "reveal"
         assert cmd.coordinate == "B3"
 
+    def test_implicit_reveal_coordinate_only(self):
+        cmd = parse_command("B3")
+        assert cmd is not None
+        assert cmd.action == "reveal"
+        assert cmd.coordinate == "B3"
+
+    def test_implicit_reveal_row_col_coordinate(self):
+        cmd = parse_command("3B")
+        assert cmd is not None
+        assert cmd.action == "reveal"
+        assert cmd.coordinate == "3B"
+
+    def test_implicit_reveal_backticked_coordinate(self):
+        cmd = parse_command("`h7`")
+        assert cmd is not None
+        assert cmd.action == "reveal"
+        assert cmd.coordinate == "h7"
+
+    def test_implicit_reveal_backticked_row_col_coordinate(self):
+        cmd = parse_command("`7h`")
+        assert cmd is not None
+        assert cmd.action == "reveal"
+        assert cmd.coordinate == "7h"
+
+    def test_implicit_reveal_requires_coordinate_only_comment(self):
+        assert parse_command("I think B3 is safe") is None
+
+    def test_slash_reveal_accepts_row_col_input(self):
+        cmd = parse_command("/reveal 3B")
+        assert cmd is not None
+        assert cmd.action == "reveal"
+        assert cmd.coordinate == "3B"
+
     def test_no_command(self):
         assert parse_command("just a regular comment") is None
 

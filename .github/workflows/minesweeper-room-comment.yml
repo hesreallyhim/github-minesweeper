@@ -19,18 +19,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+          fetch-depth: 1
+          sparse-checkout: |
+            src
       - name: Handle command
         run: |
-          PYTHONPATH=src python -c "
+          PYTHONPATH=src python3 -c "
           from minesweeper.entrypoints import room_comment_entrypoint
           room_comment_entrypoint()
           "
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MINESWEEPER_SECRET: ${{ secrets.MINESWEEPER_SECRET }}
+          MINESWEEPER_CLICK_BASE_URL: ${{ vars.MINESWEEPER_CLICK_BASE_URL }}
+          MINESWEEPER_CLICK_TTL_SECONDS: ${{ vars.MINESWEEPER_CLICK_TTL_SECONDS }}

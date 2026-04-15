@@ -7,9 +7,12 @@ replays) use to post comments and update labels.
 
 from __future__ import annotations
 
+import hashlib
+import os
+import time
 from typing import Any
 
-from minesweeper.commands import parse_command
+from minesweeper.commands import ParsedCommand, parse_command
 from minesweeper.render import render_malformed_command, render_non_owner_response
 from minesweeper.room_service import (
     apply_move,
@@ -17,6 +20,7 @@ from minesweeper.room_service import (
     load_state_from_comment,
     validate_owner,
 )
+from minesweeper.state import decode_click_token
 
 
 def handle_issue_opened(
@@ -183,6 +187,175 @@ def handle_issue_comment(
     else:
         action_label = "move"
 
+    return {
+        **base,
+        "action": action_label,
+        "body": move["body"],
+        "state": move["state"],
+        "result": result_str,
+        "labels_add": move.get("labels_add", []),
+        "labels_remove": move.get("labels_remove", []),
+    }
+
+
+def _dispatch_comment_id(token: str, request_id: str = "") -> int:
+    """Build a stable synthetic comment id for dispatch-based moves."""
+    seed = f"{token}:{request_id}".encode("utf-8")
+    digest = hashlib.sha256(seed).digest()
+    return int.from_bytes(digest[:8], byteorder="big", signed=False)
+
+
+def handle_click_dispatch(
+    payload: dict[str, Any],
+    *,
+    prior_comment_body: str | None = None,
+    secret: str | None = None,
+) -> dict[str, Any]:
+    """Process repository_dispatch click events and apply one move.
+
+    Expected ``client_payload`` fields:
+      - issue_number: int
+      - click_token: str
+      - actor: str (optional, relay-authenticated login)
+      - request_id: str (optional, relay idempotency key)
+    """
+    repo = payload.get("repository", {}).get("full_name", "")
+    secret_value = secret or os.environ.get(
+        "MINESWEEPER_SECRET", "dev-secret-do-not-use-in-prod"
+    )
+    client = payload.get("client_payload", {})
+    try:
+        issue_number = int(client.get("issue_number", 0))
+    except (TypeError, ValueError):
+        issue_number = 0
+    token = str(client.get("click_token", ""))
+    actor = str(client.get("actor", "")).strip()
+    request_id = str(client.get("request_id", ""))
+    base = {
+        "issue_number": issue_number,
+        "owner": "",
+        "repo": repo,
+        "comment_id": _dispatch_comment_id(token, request_id),
+    }
+
+    if not token or issue_number <= 0:
+        return {
+            **base,
+            "action": "invalid_dispatch",
+            "body": None,
+            "state": None,
+            "result": None,
+            "labels_add": [],
+            "labels_remove": [],
+        }
+
+    if prior_comment_body is None:
+        return {
+            **base,
+            "action": "no_state",
+            "body": None,
+            "state": None,
+            "result": None,
+            "labels_add": [],
+            "labels_remove": [],
+        }
+
+    prior_state = load_state_from_comment(prior_comment_body, secret_value)
+    if prior_state is None:
+        return {
+            **base,
+            "action": "no_state",
+            "body": None,
+            "state": None,
+            "result": None,
+            "labels_add": [],
+            "labels_remove": [],
+        }
+    base["owner"] = prior_state.get("owner", "")
+
+    click_payload = decode_click_token(token, secret_value)
+    if click_payload is None:
+        return {
+            **base,
+            "action": "invalid_click_token",
+            "body": None,
+            "state": prior_state,
+            "result": None,
+            "labels_add": [],
+            "labels_remove": [],
+        }
+
+    now = int(time.time())
+    if int(click_payload["exp"]) < now:
+        return {
+            **base,
+            "action": "stale_click",
+            "body": None,
+            "state": prior_state,
+            "result": None,
+            "labels_add": [],
+            "labels_remove": [],
+        }
+
+    if click_payload["issue_number"] != issue_number:
+        return {
+            **base,
+            "action": "invalid_click_target",
+            "body": None,
+            "state": prior_state,
+            "result": None,
+            "labels_add": [],
+            "labels_remove": [],
+        }
+    if click_payload["room_key"] != prior_state.get("room_key"):
+        return {
+            **base,
+            "action": "invalid_click_target",
+            "body": None,
+            "state": prior_state,
+            "result": None,
+            "labels_add": [],
+            "labels_remove": [],
+        }
+    if int(click_payload["seq"]) != int(prior_state.get("seq", -1)):
+        return {
+            **base,
+            "action": "stale_click",
+            "body": None,
+            "state": prior_state,
+            "result": None,
+            "labels_add": [],
+            "labels_remove": [],
+        }
+    if actor and actor.lower() != prior_state.get("owner", "").lower():
+        return {
+            **base,
+            "action": "non_owner",
+            "body": render_non_owner_response(actor),
+            "state": prior_state,
+            "result": None,
+            "labels_add": [],
+            "labels_remove": [],
+        }
+
+    command = ParsedCommand(
+        action=str(click_payload["action"]),
+        coordinate=str(click_payload["coordinate"]),
+    )
+    move = apply_move(
+        prior_state,
+        command,
+        base["comment_id"],
+        secret=secret_value,
+    )
+
+    result_str = move.get("result", "")
+    if result_str == "duplicate":
+        action_label = "duplicate"
+    elif result_str == "game_over":
+        action_label = "game_over"
+    else:
+        action_label = "move"
     return {
         **base,
         "action": action_label,

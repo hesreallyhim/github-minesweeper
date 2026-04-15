@@ -13,6 +13,9 @@ _CMD_RE = re.compile(
     r"/(reveal|flag|unflag|chord|giveup)\b\s*(\S*)",
     re.IGNORECASE,
 )
+_IMPLICIT_REVEAL_RE = re.compile(
+    r"^\s*`?([A-Za-z]\d+|\d+[A-Za-z])`?\s*$"
+)
 
 
 @dataclass
@@ -29,12 +32,18 @@ def parse_command(text: str) -> ParsedCommand | None:
     Returns None if no recognized command is found.
     """
     m = _CMD_RE.search(text)
-    if not m:
-        return None
-    action = m.group(1).lower()
-    raw_coord = m.group(2).strip() if m.group(2) else None
-    if action == "giveup":
-        return ParsedCommand(action=action, coordinate=None)
-    if not raw_coord:
-        return ParsedCommand(action=action, coordinate=None)
-    return ParsedCommand(action=action, coordinate=raw_coord)
+    if m:
+        action = m.group(1).lower()
+        raw_coord = m.group(2).strip() if m.group(2) else None
+        if action == "giveup":
+            return ParsedCommand(action=action, coordinate=None)
+        if not raw_coord:
+            return ParsedCommand(action=action, coordinate=None)
+        return ParsedCommand(action=action, coordinate=raw_coord)
+
+    # Implicit reveal shorthand: a comment containing only a coordinate
+    # (optionally wrapped in backticks), e.g. "B3" or "`B3`".
+    implicit = _IMPLICIT_REVEAL_RE.match(text)
+    if implicit:
+        return ParsedCommand(action="reveal", coordinate=implicit.group(1))
+    return None

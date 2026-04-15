@@ -1,19 +1,18 @@
-# Trigger: issue opened with the minesweeper room template.
-# Action: initialize a game room and post the first board.
+# Trigger: repository_dispatch event from click relay.
+# Action: validate signed click token and apply one board move.
 
-name: Minesweeper Room Open
+name: Minesweeper Room Click
 
 on:
-  issues:
-    types: [opened]
+  repository_dispatch:
+    types: [minesweeper-click]
 
 permissions:
   contents: read
   issues: write
 
 jobs:
-  init-room:
-    if: contains(github.event.issue.labels.*.name, 'game:minesweeper')
+  handle-click:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,11 +20,11 @@ jobs:
           fetch-depth: 1
           sparse-checkout: |
             src
-      - name: Initialize room
+      - name: Handle click dispatch
         run: |
           PYTHONPATH=src python3 -c "
-          from minesweeper.entrypoints import room_open_entrypoint
-          room_open_entrypoint()
+          from minesweeper.entrypoints import room_click_entrypoint
+          room_click_entrypoint()
           "
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

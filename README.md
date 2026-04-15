@@ -4,17 +4,20 @@ A GitHub-native single-player Minesweeper game. Open an issue to start a
 room, play by commenting commands, and see the board rendered directly in
 bot replies.
 
+Optionally, you can enable a click-relay mode where hidden cells render as
+links and each click triggers a `repository_dispatch` move workflow.
+
 ## Quick Start
 
 1. Go to **Issues** > **New issue** > select **Minesweeper Room**.
-2. Submit the issue. The bot posts a fresh 9x9 board:
+2. Submit the issue. The bot posts a fresh 9x9 table board:
 
-```
-   A B C D E F G H I
- 1 ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜
- 2 ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜
- 3 ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜
- ...
+```md
+|   | A | B | C |
+|---|---|---|---|
+| 1 | `A1` | `B1` | `C1` |
+| 2 | `A2` | `B2` | `C2` |
+| 3 | `A3` | `B3` | `C3` |
 ```
 
 3. Comment a command to play your turn:
@@ -30,16 +33,35 @@ bot replies.
 
 Revealed **B3**.
 
-   A B C D E F G H I
- 1 ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜
- 2 ⬜ 1 ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜
- 3 ⬜ · ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜
- ...
+|   | A | B | C |
+|---|---|---|---|
+| 1 | `A1` | **1** | `C1` |
+| 2 | `A2` | · | `C2` |
+| 3 | 🚩 | `B3` | `C3` |
 
 Mines remaining: **10** | Cells revealed: **5/71**
 ```
 
 5. Keep revealing cells until you win — or hit a mine!
+
+### Optional Click-to-Reveal Mode
+
+Set repository variables:
+
+- `MINESWEEPER_CLICK_BASE_URL` — relay endpoint that accepts a signed `token`
+- `MINESWEEPER_CLICK_TTL_SECONDS` (optional, default `120`)
+
+When enabled, hidden cells render as clickable table links. The relay should:
+
+1. Authenticate the GitHub user.
+2. POST a `repository_dispatch` event of type `minesweeper-click` with:
+   - `issue_number`
+   - `click_token`
+   - `actor`
+   - `request_id` (optional idempotency key)
+
+The workflow validates signature + expiry + sequence freshness before applying
+the reveal.
 
 ## Commands
 
@@ -58,7 +80,7 @@ Coordinates are spreadsheet-style: column letter (A-I) + row number
 
 | Symbol | Meaning              |
 |--------|----------------------|
-| ⬜      | Hidden (unrevealed)  |
+| `A1`   | Hidden cell (coordinate shown) |
 | 🚩      | Flagged              |
 | ·      | Revealed, no mines nearby |
 | 1-8    | Adjacent mine count  |
@@ -105,6 +127,7 @@ make docker-build
 
 - [Gameplay Guide](docs/gameplay.md) — how to play
 - [Operator Notes](docs/operator-notes.md) — deployment and operations
+- [Click Relay Contract](docs/click-relay-contract.md) — dispatch payload and validation rules
 - [V1 Game Contract](docs/v1-game-contract.md) — implementation contract
 
 ## Design

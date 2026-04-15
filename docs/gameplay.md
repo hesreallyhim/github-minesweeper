@@ -6,16 +6,17 @@
 2. Click **New issue** and select the **Minesweeper Room** template.
 3. Submit the issue. The bot replies with your room:
 
-```
+```md
 ### Minesweeper Room #1 — ⛏️ In Progress
 
 Welcome to your Minesweeper room! A 9×9 board with 10 hidden mines
 has been generated.
 
-   A B C D E F G H I
- 1 ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜
- 2 ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜
- ...
+|   | A | B | C |
+|---|---|---|---|
+| 1 | `A1` | `B1` | `C1` |
+| 2 | `A2` | `B2` | `C2` |
+| 3 | `A3` | `B3` | `C3` |
 
 Mines remaining: 10 | Cells revealed: 0/71
 ```
@@ -38,6 +39,10 @@ After each move, the bot replies with:
 3. The updated board
 4. Stats (mines remaining, cells revealed)
 5. A command reminder (while the game is active)
+
+If click-relay mode is enabled, hidden cells are rendered as clickable links
+that trigger `/reveal` via `repository_dispatch`. Slash commands remain
+supported as a fallback.
 
 ### Coordinate Format
 
@@ -90,7 +95,7 @@ When you win, the bot posts a final board with a victory message:
 
 | Symbol | Meaning                    |
 |--------|----------------------------|
-| ⬜      | Hidden (unrevealed)        |
+| `A1`   | Hidden cell (coordinate shown) |
 | 🚩      | Flagged                    |
 | ·      | Revealed, no mines nearby  |
 | 1-8    | Adjacent mine count        |

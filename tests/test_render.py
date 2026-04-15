@@ -12,6 +12,7 @@ from minesweeper.render import (
     format_move_response,
     format_room_open,
     render_board,
+    render_board_table,
     render_game_over_notice,
     render_malformed_command,
     render_non_owner_response,
@@ -59,6 +60,22 @@ class TestRenderBoard:
         board.flag(0, 0)
         text = render_board(board)
         assert "\U0001f6a9" in text  # flag symbol
+
+    def test_table_shape(self):
+        board = Board(9, 9, 10, TEST_SEED)
+        text = render_board_table(board)
+        assert text.startswith("|   | A | B | C | D | E | F | G | H | I |")
+        assert "| 1 |" in text
+        assert "`A1`" in text
+
+    def test_table_hidden_cells_can_be_clickable(self):
+        board = Board(9, 9, 10, TEST_SEED)
+
+        def link_for(label: str) -> str:
+            return f"https://example.test/click?cell={label}"
+
+        text = render_board_table(board, hidden_cell_link=link_for)
+        assert "[`A1`](https://example.test/click?cell=A1)" in text
 
 
 class TestRenderRoomHeader:

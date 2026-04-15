@@ -14,12 +14,22 @@ Tests cover:
 
 from __future__ import annotations
 
+import time
+
 import pytest
 
 from tests.conftest import load_fixture
 
-from minesweeper.github_events import handle_issue_comment, handle_issue_opened
-from minesweeper.state import decode_state, extract_state_token
+from minesweeper.github_events import (
+    handle_click_dispatch,
+    handle_issue_comment,
+    handle_issue_opened,
+)
+from minesweeper.state import (
+    decode_state,
+    encode_click_token,
+    extract_state_token,
+)
 
 # Deterministic seed for reproducible tests
 TEST_SECRET = "test-secret-key"
@@ -44,9 +54,9 @@ class TestHandleIssueOpened:
         result = handle_issue_opened(payload, secret=TEST_SECRET, seed=TEST_SEED)
 
         body = result["body"]
-        assert "```" in body  # fenced code block
-        assert "A B C" in body  # column headers
-        assert "\u2b1c" in body  # hidden cells
+        assert "|   | A | B | C |" in body  # table header
+        assert "| 1 |" in body  # first row
+        assert "`A1`" in body  # hidden cell coordinate
 
     def test_room_body_contains_state_token(self):
         payload = load_fixture("issue-open.json")
@@ -83,6 +93,19 @@ class TestHandleIssueOpened:
         assert r1["body"] == r2["body"]
         assert r1["state"] == r2["state"]
 
+    def test_clickable_table_when_click_url_set(self, monkeypatch):
+        monkeypatch.setenv(
+            "MINESWEEPER_CLICK_BASE_URL",
+            "https://click.example.test/play",
+        )
+        payload = load_fixture("issue-open.json")
+        result = handle_issue_opened(payload, secret=TEST_SECRET, seed=TEST_SEED)
+        body = result["body"]
+        assert "|   | A | B | C |" in body
+        assert "[`A1`](https://click.example.test/play?" in body
+        assert "token=" in body
+        assert "cell=A1" in body
+
 
 class TestHandleIssueComment:
     """Tests for the issue-comment event handler."""
@@ -104,7 +127,7 @@ class TestHandleIssueComment:
         assert result["action"] == "move"
         assert result["comment_id"] == 100
         assert result["body"] is not None
-        assert "```" in result["body"]  # board rendered
+        assert "|   | A | B | C |" in result["body"]  # board rendered
 
         # State was advanced
         state = result["state"]
@@ -343,10 +366,9 @@ class TestRenderIntegration:
         result = handle_issue_opened(payload, secret=TEST_SECRET, seed=TEST_SEED)
         body = result["body"]
 
-        # Extract the code block
-        lines = body.split("```")[1].strip().split("\n")
-        assert lines[0].strip().startswith("A B C")  # column headers
-        assert len(lines) == 10  # header + 9 rows
+        table_lines = [line for line in body.splitlines() if line.startswith("|")]
+        assert table_lines[0].startswith("|   | A | B | C |")  # column headers
+        assert len(table_lines) == 11  # header + divider + 9 rows
 
     def test_room_header_present(self):
         payload = load_fixture("issue-open.json")
@@ -398,3 +420,134 @@ class TestRoomService:
         from minesweeper.room_service import load_state_from_comment
 
         assert load_state_from_comment("no token here", TEST_SECRET) is None
+
+
+class TestHandleClickDispatch:
+    """Tests for repository_dispatch click orchestration."""
+
+    def _create_room(self):
+        payload = load_fixture("issue-open.json")
+        result = handle_issue_opened(payload, secret=TEST_SECRET, seed=TEST_SEED)
+        return result["body"]
+
+    def _dispatch_payload(self, token: str, *, issue_number: int = 1, actor: str = "testplayer"):
+        return {
+            "repository": {"full_name": "testowner/github-issue-minesweeper"},
+            "client_payload": {
+                "issue_number": issue_number,
+                "click_token": token,
+                "actor": actor,
+                "request_id": "req-1",
+            },
+        }
+
+    def test_valid_click_applies_move(self):
+        prior_body = self._create_room()
+        prior_token = extract_state_token(prior_body)
+        assert prior_token is not None
+        state = decode_state(prior_token, TEST_SECRET)
+        assert state is not None
+
+        token = encode_click_token(
+            room_key=state["room_key"],
+            issue_number=1,
+            owner="testplayer",
+            action="reveal",
+            coordinate="B3",
+            seq=state["seq"],
+            expires_at=int(time.time()) + 300,
+            secret=TEST_SECRET,
+        )
+        payload = self._dispatch_payload(token)
+        result = handle_click_dispatch(
+            payload,
+            prior_comment_body=prior_body,
+            secret=TEST_SECRET,
+        )
+
+        assert result["action"] == "move"
+        assert result["body"] is not None
+        assert result["state"]["seq"] == 1
+
+    def test_stale_seq_rejected(self):
+        prior_body = self._create_room()
+        prior_token = extract_state_token(prior_body)
+        assert prior_token is not None
+        state = decode_state(prior_token, TEST_SECRET)
+        assert state is not None
+
+        token = encode_click_token(
+            room_key=state["room_key"],
+            issue_number=1,
+            owner="testplayer",
+            action="reveal",
+            coordinate="B3",
+            seq=state["seq"],
+            expires_at=int(time.time()) + 300,
+            secret=TEST_SECRET,
+        )
+        payload = self._dispatch_payload(token)
+        first = handle_click_dispatch(
+            payload,
+            prior_comment_body=prior_body,
+            secret=TEST_SECRET,
+        )
+        assert first["action"] == "move"
+
+        second = handle_click_dispatch(
+            payload,
+            prior_comment_body=first["body"],
+            secret=TEST_SECRET,
+        )
+        assert second["action"] == "stale_click"
+        assert second["body"] is None
+
+    def test_expired_click_rejected(self):
+        prior_body = self._create_room()
+        prior_token = extract_state_token(prior_body)
+        assert prior_token is not None
+        state = decode_state(prior_token, TEST_SECRET)
+        assert state is not None
+        token = encode_click_token(
+            room_key=state["room_key"],
+            issue_number=1,
+            owner="testplayer",
+            action="reveal",
+            coordinate="A1",
+            seq=state["seq"],
+            expires_at=int(time.time()) - 5,
+            secret=TEST_SECRET,
+        )
+        payload = self._dispatch_payload(token)
+        result = handle_click_dispatch(
+            payload,
+            prior_comment_body=prior_body,
+            secret=TEST_SECRET,
+        )
+        assert result["action"] == "stale_click"
+        assert result["body"] is None
+
+    def test_actor_mismatch_rejected(self):
+        prior_body = self._create_room()
+        prior_token = extract_state_token(prior_body)
+        assert prior_token is not None
+        state = decode_state(prior_token, TEST_SECRET)
+        assert state is not None
+        token = encode_click_token(
+            room_key=state["room_key"],
+            issue_number=1,
+            owner="testplayer",
+            action="reveal",
+            coordinate="A1",
+            seq=state["seq"],
+            expires_at=int(time.time()) + 300,
+            secret=TEST_SECRET,
+        )
+        payload = self._dispatch_payload(token, actor="interloper")
+        result = handle_click_dispatch(
+            payload,
+            prior_comment_body=prior_body,
+            secret=TEST_SECRET,
+        )
+        assert result["action"] == "non_owner"
+        assert "interloper" in (result["body"] or "")

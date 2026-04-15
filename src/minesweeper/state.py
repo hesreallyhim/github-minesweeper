@@ -14,12 +14,13 @@ import hmac
 import json
 import re
 
-_MARKER = "MINESWEEPER_STATE_V1"
-_TOKEN_RE = re.compile(
-    r"<!--\s*" + re.escape(_MARKER) + r":\s*(\S+)\s*-->"
+_STATE_MARKER = "MINESWEEPER_STATE_V1"
+_STATE_TOKEN_RE = re.compile(
+    r"<!--\s*" + re.escape(_STATE_MARKER) + r":\s*(\S+)\s*-->"
 )
 
 SCHEMA_VERSION = "v1"
+CLICK_SCHEMA = "click-v1"
 
 
 def _b64url_encode(data: bytes) -> str:
@@ -42,24 +43,16 @@ def _sign(payload_b64: str, secret: str) -> str:
     return _b64url_encode(sig)
 
 
-def encode_state(payload: dict, secret: str) -> str:
-    """Encode a state payload into a signed token string.
-
-    Returns the full HTML comment marker ready to embed in a bot comment.
-    """
+def _encode_token(payload: dict, secret: str) -> str:
+    """Encode a payload dict into a signed 'payload.sig' token string."""
     payload_json = json.dumps(payload, separators=(",", ":"), sort_keys=True)
     payload_b64 = _b64url_encode(payload_json.encode("utf-8"))
     sig = _sign(payload_b64, secret)
-    token = f"{payload_b64}.{sig}"
-    return f"<!-- {_MARKER}: {token} -->"
+    return f"{payload_b64}.{sig}"
 
 
-def decode_state(token: str, secret: str) -> dict | None:
-    """Decode and verify a signed token, returning the payload or None.
-
-    The token is the raw 'payload_b64.sig' string (without HTML comment
-    wrapper). Returns None if the signature is invalid or data is malformed.
-    """
+def _decode_token(token: str, secret: str) -> dict | None:
+    """Decode and verify a signed token, returning the payload or None."""
     parts = token.split(".", 1)
     if len(parts) != 2:
         return None
@@ -74,12 +67,72 @@ def decode_state(token: str, secret: str) -> dict | None:
         return None
 
 
+def encode_state(payload: dict, secret: str) -> str:
+    """Encode a state payload into a signed HTML comment marker."""
+    token = _encode_token(payload, secret)
+    return f"<!-- {_STATE_MARKER}: {token} -->"
+
+
+def decode_state(token: str, secret: str) -> dict | None:
+    """Decode and verify a state token, returning the payload or None."""
+    return _decode_token(token, secret)
+
+
+def encode_click_token(
+    *,
+    room_key: str,
+    issue_number: int,
+    owner: str,
+    action: str,
+    coordinate: str,
+    seq: int,
+    expires_at: int,
+    secret: str,
+) -> str:
+    """Create a signed click token for relay-triggered board actions."""
+    payload = {
+        "schema": CLICK_SCHEMA,
+        "version": 1,
+        "room_key": room_key,
+        "issue_number": issue_number,
+        "owner": owner,
+        "action": action,
+        "coordinate": coordinate,
+        "seq": seq,
+        "exp": expires_at,
+    }
+    return _encode_token(payload, secret)
+
+
+def decode_click_token(token: str, secret: str) -> dict | None:
+    """Decode and validate a click token payload."""
+    payload = _decode_token(token, secret)
+    if not isinstance(payload, dict):
+        return None
+    if payload.get("schema") != CLICK_SCHEMA:
+        return None
+    if payload.get("version") != 1:
+        return None
+    required = (
+        "room_key",
+        "issue_number",
+        "owner",
+        "action",
+        "coordinate",
+        "seq",
+        "exp",
+    )
+    if any(k not in payload for k in required):
+        return None
+    return payload
+
+
 def extract_state_token(comment_body: str) -> str | None:
     """Extract the raw token from a bot comment's HTML marker.
 
     Returns the 'payload_b64.sig' string, or None if not found.
     """
-    m = _TOKEN_RE.search(comment_body)
+    m = _STATE_TOKEN_RE.search(comment_body)
     if not m:
         return None
     return m.group(1)

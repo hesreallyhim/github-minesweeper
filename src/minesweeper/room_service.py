@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any
+from typing import Any, Callable
+from urllib.parse import urlencode, urlsplit, urlunsplit
 
 from minesweeper.commands import ParsedCommand
 from minesweeper.config import DEFAULT_COLS, DEFAULT_MINES, DEFAULT_ROWS
@@ -17,6 +18,7 @@ from minesweeper.engine import Board, MoveResult, Phase
 from minesweeper.state import (
     decode_state,
     derive_room_key,
+    encode_click_token,
     encode_state,
     extract_state_token,
     make_initial_state,
@@ -26,6 +28,83 @@ from minesweeper.state import (
 def _get_secret() -> str:
     """Return the HMAC signing secret from the environment."""
     return os.environ.get("MINESWEEPER_SECRET", "dev-secret-do-not-use-in-prod")
+
+
+def _get_click_base_url() -> str:
+    """Return the optional click relay URL base for clickable boards."""
+    return os.environ.get("MINESWEEPER_CLICK_BASE_URL", "").strip()
+
+
+def _get_click_ttl_seconds() -> int:
+    """Return click token ttl in seconds."""
+    raw = os.environ.get("MINESWEEPER_CLICK_TTL_SECONDS", "120").strip()
+    try:
+        ttl = int(raw)
+    except ValueError:
+        ttl = 120
+    return max(ttl, 30)
+
+
+def _with_query_params(base_url: str, params: dict[str, str | int]) -> str:
+    """Append/merge query params into base_url."""
+    parts = urlsplit(base_url)
+    existing = parts.query
+    extra = urlencode(params)
+    query = f"{existing}&{extra}" if existing else extra
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, query, parts.fragment))
+
+
+def _build_hidden_cell_link(
+    state: dict[str, Any],
+    secret: str,
+) -> Callable[[str], str] | None:
+    """Build a hidden-cell link factory for reveal clicks."""
+    base_url = _get_click_base_url()
+    if not base_url:
+        return None
+
+    expires_at = int(time.time()) + _get_click_ttl_seconds()
+
+    def _link_for(label: str) -> str:
+        token = encode_click_token(
+            room_key=state["room_key"],
+            issue_number=state["issue_number"],
+            owner=state["owner"],
+            action="reveal",
+            coordinate=label,
+            seq=state["seq"],
+            expires_at=expires_at,
+            secret=secret,
+        )
+        return _with_query_params(
+            base_url,
+            {
+                "token": token,
+                "issue": state["issue_number"],
+                "cell": label,
+                "seq": state["seq"],
+            },
+        )
+
+    return _link_for
+
+
+def _render_board_surface(
+    board: Board,
+    state: dict[str, Any],
+    *,
+    secret: str,
+    reveal_all: bool,
+) -> str:
+    """Render the board as a Markdown table (optionally clickable)."""
+    from minesweeper.render import render_board_table
+
+    hidden_cell_link = None if reveal_all else _build_hidden_cell_link(state, secret)
+    return render_board_table(
+        board,
+        reveal_all=reveal_all,
+        hidden_cell_link=hidden_cell_link,
+    )
 
 
 def create_room(
@@ -65,12 +144,16 @@ def create_room(
 
     from minesweeper.render import (
         format_room_open,
-        render_board,
         render_room_header,
         render_stats,
     )
 
-    board_text = render_board(board)
+    board_text = _render_board_surface(
+        board,
+        state,
+        secret=secret,
+        reveal_all=False,
+    )
     header = render_room_header(owner, issue_number, Phase.PLAYING)
     stats = render_stats(board)
     body_content = format_room_open(header, board_text, stats, mines)
@@ -152,12 +235,16 @@ def apply_move(
 
     from minesweeper.render import (
         format_move_response,
-        render_board,
         render_room_header,
         render_stats,
     )
 
-    board_text = render_board(board, reveal_all=reveal_all)
+    board_text = _render_board_surface(
+        board,
+        new_state,
+        secret=secret,
+        reveal_all=reveal_all,
+    )
     header = render_room_header(
         new_state["owner"], new_state["issue_number"], board.phase
     )

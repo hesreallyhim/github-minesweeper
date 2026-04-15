@@ -15,9 +15,13 @@ class TestParseCoord:
     def test_valid_b3(self):
         assert parse_coord("B3", rows=9, cols=9) == (2, 1)
 
+    def test_valid_row_col_3b(self):
+        assert parse_coord("3B", rows=9, cols=9) == (2, 1)
+
     def test_case_insensitive(self):
         assert parse_coord("b3", rows=9, cols=9) == (2, 1)
         assert parse_coord("B3", rows=9, cols=9) == (2, 1)
+        assert parse_coord("3b", rows=9, cols=9) == (2, 1)
 
     def test_whitespace_tolerance(self):
         assert parse_coord("  B3  ", rows=9, cols=9) == (2, 1)

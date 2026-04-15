@@ -15,7 +15,11 @@ import os
 import sys
 from typing import Any
 
-from minesweeper.github_events import handle_issue_comment, handle_issue_opened
+from minesweeper.github_events import (
+    handle_click_dispatch,
+    handle_issue_comment,
+    handle_issue_opened,
+)
 
 
 def _load_event() -> dict[str, Any]:
@@ -135,7 +139,7 @@ def _fetch_latest_bot_comment(
 
     url = (
         f"https://api.github.com/repos/{repo}"
-        f"/issues/{issue_number}/comments?per_page=100&sort=created&direction=desc"
+        f"/issues/{issue_number}/comments?per_page=30&sort=created&direction=desc"
     )
     req = urllib.request.Request(
         url,
@@ -201,6 +205,35 @@ def room_comment_entrypoint() -> None:
     print(f"Handled comment (action={action}, result={result.get('result')})")
 
 
+def room_click_entrypoint() -> None:
+    """Entrypoint for repository_dispatch click events."""
+    payload = _load_event()
+    repo = payload.get("repository", {}).get("full_name", "")
+    raw_issue_number = payload.get("client_payload", {}).get("issue_number", 0)
+    try:
+        issue_number = int(raw_issue_number)
+    except (TypeError, ValueError):
+        issue_number = 0
+
+    prior_body = _fetch_latest_bot_comment(repo, issue_number)
+    result = handle_click_dispatch(
+        payload,
+        prior_comment_body=prior_body,
+    )
+
+    body = result.get("body")
+    if body and repo and issue_number:
+        _github_api_post_comment(repo, issue_number, body)
+        _github_api_update_labels(
+            repo, issue_number,
+            result.get("labels_add", []),
+            result.get("labels_remove", []),
+        )
+
+    action = result.get("action", "unknown")
+    print(f"Handled click dispatch (action={action}, result={result.get('result')})")
+
+
 if __name__ == "__main__":
     # Allow direct invocation for testing:
     #   python -m minesweeper.entrypoints open <payload.json>
@@ -211,7 +244,10 @@ if __name__ == "__main__":
     elif len(sys.argv) >= 2 and sys.argv[1] == "comment":
         sys.argv = [sys.argv[0]] + sys.argv[2:]
         room_comment_entrypoint()
+    elif len(sys.argv) >= 2 and sys.argv[1] == "click":
+        sys.argv = [sys.argv[0]] + sys.argv[2:]
+        room_click_entrypoint()
     else:
-        print("Usage: python -m minesweeper.entrypoints <open|comment> [payload.json]",
+        print("Usage: python -m minesweeper.entrypoints <open|comment|click> [payload.json]",
               file=sys.stderr)
         sys.exit(1)

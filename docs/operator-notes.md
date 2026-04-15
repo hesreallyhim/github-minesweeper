@@ -26,6 +26,13 @@ characters. Generate one with:
 python3 -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
+## Repository Variables (Optional)
+
+| Variable                        | Purpose                                      |
+|---------------------------------|----------------------------------------------|
+| `MINESWEEPER_CLICK_BASE_URL`    | Enables clickable hidden-cell links          |
+| `MINESWEEPER_CLICK_TTL_SECONDS` | Link token TTL (default 120s)                |
+
 ## GitHub Labels
 
 The following labels should exist in the repository:
@@ -39,7 +46,7 @@ The following labels should exist in the repository:
 
 ## Workflows
 
-Two GitHub Actions workflows handle the game loop:
+Three GitHub Actions workflows handle the game loop:
 
 - **minesweeper-room-open.yml** — Triggered when an issue with the
   `game:minesweeper` label is opened. Initializes the room and posts the
@@ -47,6 +54,9 @@ Two GitHub Actions workflows handle the game loop:
 - **minesweeper-room-comment.yml** — Triggered when a comment is created
   on an issue with the `game:minesweeper` label. Parses the command,
   applies the move, and posts the updated board.
+- **minesweeper-room-click.yml** — Triggered by `repository_dispatch`
+  type `minesweeper-click` (from an authenticated relay). Validates the
+  signed click token and applies one move.
 
 ## Configuration
 

@@ -8,22 +8,28 @@ from __future__ import annotations
 
 import re
 
-_COORD_RE = re.compile(r"^([A-Za-z])(\d+)$")
+_COL_ROW_RE = re.compile(r"^([A-Za-z])(\d+)$")
+_ROW_COL_RE = re.compile(r"^(\d+)([A-Za-z])$")
 
 
 def parse_coord(raw: str, rows: int, cols: int) -> tuple[int, int] | None:
     """Parse a coordinate string into (row, col) or return None if invalid.
 
-    Accepts formats like 'B3', 'a1', 'I9'. Column letters are mapped
-    A=0, B=1, ... and row numbers are 1-indexed (1=row 0 internally).
+    Accepts formats like 'B3', '3B', 'a1', '1a', 'I9'. Column letters are
+    mapped A=0, B=1, ... and row numbers are 1-indexed (1=row 0 internally).
     Returns None for out-of-bounds or malformed input.
     """
     raw = raw.strip()
-    m = _COORD_RE.match(raw)
-    if not m:
+    col_row = _COL_ROW_RE.match(raw)
+    row_col = _ROW_COL_RE.match(raw)
+    if col_row:
+        col = ord(col_row.group(1).upper()) - ord("A")
+        row = int(col_row.group(2)) - 1
+    elif row_col:
+        row = int(row_col.group(1)) - 1
+        col = ord(row_col.group(2).upper()) - ord("A")
+    else:
         return None
-    col = ord(m.group(1).upper()) - ord("A")
-    row = int(m.group(2)) - 1
     if row < 0 or row >= rows or col < 0 or col >= cols:
         return None
     return (row, col)

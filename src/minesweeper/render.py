@@ -14,6 +14,9 @@ Bot response sections:
 
 from __future__ import annotations
 
+from typing import Callable
+
+from minesweeper.coords import coord_to_label
 from minesweeper.engine import Board, Phase
 
 # Symbol map per v1-game-contract rendering contract
@@ -50,6 +53,53 @@ def render_board(board: Board, *, reveal_all: bool = False) -> str:
         lines.append(f"{row_label} {' '.join(cells)}")
     board_text = "\n".join(lines)
     return f"```\n{board_text}\n```"
+
+
+def render_board_table(
+    board: Board,
+    *,
+    reveal_all: bool = False,
+    hidden_cell_link: Callable[[str], str] | None = None,
+) -> str:
+    """Render the board as a GitHub Markdown table.
+
+    If ``hidden_cell_link`` is provided, hidden cells become clickable links.
+    """
+    headers = [chr(65 + c) for c in range(board.cols)]
+    lines = [
+        "|   | " + " | ".join(headers) + " |",
+        "|" + "---|" * (board.cols + 1),
+    ]
+    for r in range(board.rows):
+        row_cells: list[str] = []
+        for c in range(board.cols):
+            display = board.get_cell_display(r, c, reveal_all=reveal_all)
+            label = coord_to_label(r, c)
+            row_cells.append(_table_cell(display, label, hidden_cell_link))
+        lines.append(f"| {r + 1} | " + " | ".join(row_cells) + " |")
+    return "\n".join(lines)
+
+
+def _table_cell(
+    display: str,
+    label: str,
+    hidden_cell_link: Callable[[str], str] | None,
+) -> str:
+    """Render one table cell for issue-comment Markdown."""
+    if display == "hidden":
+        if hidden_cell_link is not None:
+            return f"[`{label}`]({hidden_cell_link(label)})"
+        return f"`{label}`"
+    if display == "empty":
+        return "·"
+    if display == "flag":
+        return "\U0001f6a9"
+    if display == "mine":
+        return "\U0001f4a3"
+    if display == "exploded":
+        return "\U0001f4a5"
+    # Numbered cells: "1" through "8"
+    return f"**{display}**"
 
 
 def _symbol(display: str) -> str:
