@@ -21,16 +21,15 @@ body:
         Only you (the issue opener) can play in this room.
 
         We don't currently support "saved games" - you will have 30 minutes before your game room is closed.
-        Please only keep one open issue at a time. 
+        Please only keep one open issue at a time.
 
-
-    - type: checkboxes
-      id: conduct
-      attributes:
-        label: Code of Conduct
-        description: By participating, you agree to follow our [Code of Conduct](https://github.com/hesreallyhim/).
-        options:
-          - label: I have read the Code of Conduct and agree to respect the rules and standards of this repository.
-            required: true
-        validations:
+  - type: checkboxes
+    id: conduct
+    attributes:
+      label: Code of Conduct
+      description: By participating, you agree to follow our [Code of Conduct](https://github.com/hesreallyhim/).
+      options:
+        - label: I have read the Code of Conduct and agree to respect the rules and standards of this repository.
           required: true
+    validations:
+      required: true
