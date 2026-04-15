@@ -1,8 +1,7 @@
 name: "Minesweeper Room"
 description: "Start a new Minesweeper game room"
 title: "Minesweeper Room"
-labels:
-  - "game:minesweeper"
+labels: ["game:minesweeper"]
 body:
   - type: markdown
     attributes:
