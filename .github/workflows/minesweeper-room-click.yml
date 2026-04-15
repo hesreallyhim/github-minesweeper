@@ -8,7 +8,7 @@ on:
     types: [minesweeper-click]
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 jobs:

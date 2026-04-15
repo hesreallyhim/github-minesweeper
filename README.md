@@ -95,12 +95,36 @@ Coordinates are spreadsheet-style: column letter (A-I) + row number
 - Each command is processed exactly once (duplicate-safe).
 - Reveal all safe cells to win. You don't need to flag every mine.
 
+## Hall of Fame
+
+<!-- MS_LEADERBOARD_START -->
+### Leaderboards
+_As of (UTC): n/a from 0 completed games_
+(Leaderboards update every 15 minutes)
+
+<table align="center">
+  <tr>
+    <td><picture><img src="assets/readme-leaderboard-card-champions.svg" alt="Champions Card" width="460" /></picture></td>
+    <td><picture><img src="assets/readme-leaderboard-card-commitment.svg" alt="Commitment Card" width="460" /></picture></td>
+  </tr>
+  <tr>
+    <td><picture><img src="assets/readme-leaderboard-card-quick-clear.svg" alt="Quick Clear Card" width="460" /></picture></td>
+    <td><picture><img src="assets/readme-leaderboard-card-consistency.svg" alt="Consistency Card" width="460" /></picture></td>
+  </tr>
+</table>
+
+<em>No completed games yet.</em>
+<!-- MS_LEADERBOARD_END -->
+
 ## Project Structure
 
 ```
 src/minesweeper/       # Game engine, state, commands, rendering
 tests/                 # Unit tests and fixture-driven tests
 tests/fixtures/github/ # Replayable GitHub event payloads
+data/games/            # Terminal game records for leaderboard generation
+data/leaderboards.json # Machine-readable leaderboard summary
+assets/                # Generated README leaderboard card SVGs
 .github/workflows/     # GitHub Actions for room lifecycle
 .github/ISSUE_TEMPLATE/# Issue template for starting a room
 scripts/               # Local development and replay tools
@@ -118,6 +142,9 @@ make test
 
 # Run lint checks
 make lint
+
+# Rebuild leaderboard cards + JSON + README block
+make leaderboard-build
 
 # Build the Docker image
 make docker-build

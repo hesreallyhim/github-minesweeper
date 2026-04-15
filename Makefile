@@ -10,7 +10,7 @@ MYPY := $(VENV_BIN)/mypy
 
 .DEFAULT_GOAL := help
 
-.PHONY: help venv bootstrap test lint typecheck simulate-room docker-build docker-test docker-replay clean
+.PHONY: help venv bootstrap test lint typecheck simulate-room leaderboard-build leaderboard-reset docker-build docker-test docker-replay clean
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*## "; print "Targets:"} /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -39,6 +39,22 @@ simulate-room: bootstrap ## Replay fixture sequence through the local engine
 		tests/fixtures/github/issue-open.json \
 		tests/fixtures/github/owner-reveal.json \
 		tests/fixtures/github/owner-flag.json
+
+leaderboard-build: bootstrap ## Rebuild leaderboard markdown/json/cards from data/games
+	PYTHONPATH=src $(VENV_PYTHON) scripts/build_leaderboards.py \
+		--games-root data/games \
+		--readme README.md \
+		--json-out data/leaderboards.json \
+		--cards-dir assets
+
+leaderboard-reset: bootstrap ## Reset game records and regenerate empty leaderboard outputs
+	rm -rf data/games
+	mkdir -p data/games
+	PYTHONPATH=src $(VENV_PYTHON) scripts/build_leaderboards.py \
+		--games-root data/games \
+		--readme README.md \
+		--json-out data/leaderboards.json \
+		--cards-dir assets
 
 docker-build: ## Build the local Docker image
 	docker build -t gh-issue-minesweeper .

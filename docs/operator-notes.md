@@ -46,7 +46,7 @@ The following labels should exist in the repository:
 
 ## Workflows
 
-Three GitHub Actions workflows handle the game loop:
+Four GitHub Actions workflows handle the game loop:
 
 - **minesweeper-room-open.yml** — Triggered when an issue with the
   `game:minesweeper` label is opened. Initializes the room and posts the
@@ -57,6 +57,16 @@ Three GitHub Actions workflows handle the game loop:
 - **minesweeper-room-click.yml** — Triggered by `repository_dispatch`
   type `minesweeper-click` (from an authenticated relay). Validates the
   signed click token and applies one move.
+- **minesweeper-leaderboards.yml** — Scheduled every 15 minutes (and
+  manually dispatchable). Rebuilds README leaderboard cards and
+  `data/leaderboards.json` from terminal game records in `data/games/`.
+
+Terminal game records are written as one JSON file per issue:
+
+- `data/games/<issue_number>.json`
+
+Schema: `minesweeper-game-result-v1` with player, result, moves, board
+dimensions, mine count, and `completed_at` timestamp.
 
 ## Configuration
 
@@ -85,6 +95,12 @@ PYTHONPATH=src python scripts/replay_fixture.py \
 
 # Replay all fixtures in a directory
 PYTHONPATH=src python scripts/replay_fixture.py tests/fixtures/github/
+
+# Rebuild leaderboard cards + JSON + README block
+make leaderboard-build
+
+# Reset records and regenerate empty leaderboard outputs
+make leaderboard-reset
 ```
 
 ## Docker
@@ -118,3 +134,5 @@ live smoke testing.
   silently skips duplicates.
 - **Multiple active rooms**: The engine enforces one active room per
   player. A second room attempt should be rejected.
+- **Leaderboard not updating**: Check that `data/games/` contains
+  terminal records and that `minesweeper-leaderboards.yml` has run.

@@ -10,6 +10,8 @@ path as a CLI argument.
 
 from __future__ import annotations
 
+import base64
+import datetime as dt
 import json
 import os
 import sys
@@ -20,6 +22,8 @@ from minesweeper.github_events import (
     handle_issue_comment,
     handle_issue_opened,
 )
+
+TERMINAL_PHASES = {"won", "lost", "given_up"}
 
 
 def _load_event() -> dict[str, Any]:
@@ -68,6 +72,130 @@ def _github_api_post_comment(
     except Exception as exc:
         print(f"Failed to post comment: {exc}", file=sys.stderr)
         sys.exit(1)
+
+
+def _github_api_get_content(
+    repo: str,
+    path: str,
+) -> tuple[dict[str, Any] | None, str | None]:
+    """Fetch repository file content metadata and decoded JSON payload."""
+    import urllib.request
+    import urllib.parse
+
+    token = os.environ.get("GITHUB_TOKEN", "")
+    if not token:
+        return None, None
+
+    quoted_path = urllib.parse.quote(path, safe="/")
+    url = f"https://api.github.com/repos/{repo}/contents/{quoted_path}"
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github+json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return None, None
+
+    sha = body.get("sha")
+    content = body.get("content")
+    if not isinstance(content, str):
+        return None, sha
+    try:
+        raw = base64.b64decode(content.encode("ascii"), validate=False)
+        decoded = json.loads(raw.decode("utf-8"))
+    except Exception:
+        return None, sha
+    if not isinstance(decoded, dict):
+        return None, sha
+    return decoded, sha
+
+
+def _github_api_upsert_json_content(
+    repo: str,
+    path: str,
+    payload: dict[str, Any],
+    *,
+    message: str,
+    sha: str | None = None,
+) -> bool:
+    """Create/update a JSON file in the repository via the contents API."""
+    import urllib.request
+    import urllib.parse
+
+    token = os.environ.get("GITHUB_TOKEN", "")
+    if not token:
+        return False
+
+    quoted_path = urllib.parse.quote(path, safe="/")
+    url = f"https://api.github.com/repos/{repo}/contents/{quoted_path}"
+    raw = (json.dumps(payload, indent=2) + "\n").encode("utf-8")
+    body: dict[str, Any] = {
+        "message": message,
+        "content": base64.b64encode(raw).decode("ascii"),
+    }
+    if sha:
+        body["sha"] = sha
+
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode("utf-8"),
+        headers={
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json",
+        },
+        method="PUT",
+    )
+    try:
+        with urllib.request.urlopen(req):
+            return True
+    except Exception as exc:
+        print(f"Failed to write {path}: {exc}", file=sys.stderr)
+        return False
+
+
+def _maybe_record_terminal_game(
+    *,
+    repo: str,
+    issue_number: int,
+    state: dict[str, Any] | None,
+) -> None:
+    """Persist terminal game records in data/games for leaderboard builds."""
+    if not state:
+        return
+    phase = str(state.get("phase", "")).strip().lower()
+    if phase not in TERMINAL_PHASES:
+        return
+
+    record_path = f"data/games/{issue_number}.json"
+    existing, existing_sha = _github_api_get_content(repo, record_path)
+    if existing is not None:
+        # One issue is one room. Keep first terminal record as canonical.
+        return
+
+    record = {
+        "schema": "minesweeper-game-result-v1",
+        "issue": issue_number,
+        "player": state.get("owner", ""),
+        "result": phase,
+        "moves": int(state.get("seq", 0)),
+        "rows": int(state.get("rows", 0)),
+        "cols": int(state.get("cols", 0)),
+        "mines": int(state.get("mines", 0)),
+        "completed_at": dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat(),
+    }
+    _github_api_upsert_json_content(
+        repo,
+        record_path,
+        record,
+        message=f"leaderboard: record game #{issue_number}",
+        sha=existing_sha,
+    )
 
 
 def _github_api_update_labels(
@@ -200,6 +328,11 @@ def room_comment_entrypoint() -> None:
             result.get("labels_add", []),
             result.get("labels_remove", []),
         )
+        _maybe_record_terminal_game(
+            repo=repo,
+            issue_number=issue_number,
+            state=result.get("state"),
+        )
 
     action = result.get("action", "unknown")
     print(f"Handled comment (action={action}, result={result.get('result')})")
@@ -228,6 +361,11 @@ def room_click_entrypoint() -> None:
             repo, issue_number,
             result.get("labels_add", []),
             result.get("labels_remove", []),
+        )
+        _maybe_record_terminal_game(
+            repo=repo,
+            issue_number=issue_number,
+            state=result.get("state"),
         )
 
     action = result.get("action", "unknown")
