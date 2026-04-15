@@ -19,15 +19,9 @@ body:
         - `/giveup` — end the game
 
         Only you (the issue opener) can play in this room.
-  
-  - type: checkboxes
-    id: conduct
-    title: "Conduct"
-    attributes:
-      description: "I have read the CODE_OF_CONDUCT and agree to respect the rules of the repository"
-      required: true
-    validations:
-      required: true
+
+        We don't currently support "saved games" - you will have 30 minutes before your game room is closed.
+        Please only keep one open issue at a time. 
 
 
   - type: checkboxes
