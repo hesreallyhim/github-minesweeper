@@ -18,6 +18,7 @@ GitHub Issue Minesweeper in a repository.
 |----------------------|--------------------------------------------|
 | `GITHUB_TOKEN`       | Post bot comments, manage labels           |
 | `MINESWEEPER_SECRET` | Sign and verify hidden game state tokens   |
+| `GITHUB_WEBHOOK_SECRET` | Verify GitHub App webhook signatures (webhook mode) |
 
 The `MINESWEEPER_SECRET` should be a random string of at least 32
 characters. Generate one with:
@@ -101,6 +102,9 @@ make leaderboard-build
 
 # Reset records and regenerate empty leaderboard outputs
 make leaderboard-reset
+
+# Run webhook server mode locally (experimental)
+make webhook-serve
 ```
 
 ## Docker
@@ -136,3 +140,5 @@ live smoke testing.
   player. A second room attempt should be rejected.
 - **Leaderboard not updating**: Check that `data/games/` contains
   terminal records and that `minesweeper-leaderboards.yml` has run.
+- **Webhook mode signature failures**: Ensure `GITHUB_WEBHOOK_SECRET`
+  matches the webhook secret configured on the GitHub App.

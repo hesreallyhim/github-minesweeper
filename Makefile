@@ -10,7 +10,7 @@ MYPY := $(VENV_BIN)/mypy
 
 .DEFAULT_GOAL := help
 
-.PHONY: help venv bootstrap test lint typecheck simulate-room leaderboard-build leaderboard-reset docker-build docker-test docker-replay clean
+.PHONY: help venv bootstrap test lint typecheck simulate-room leaderboard-build leaderboard-reset docker-build docker-test docker-replay webhook-serve clean
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*## "; print "Targets:"} /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -67,6 +67,9 @@ docker-replay: docker-build ## Replay fixtures inside Docker
 		tests/fixtures/github/issue-open.json \
 		tests/fixtures/github/owner-reveal.json \
 		tests/fixtures/github/owner-flag.json
+
+webhook-serve: bootstrap ## Run the local webhook HTTP server
+	PYTHONPATH=src $(VENV_PYTHON) -m minesweeper.webhook_server
 
 clean: ## Remove local development caches
 	rm -rf $(VENV) .pytest_cache .mypy_cache .ruff_cache .coverage __pycache__

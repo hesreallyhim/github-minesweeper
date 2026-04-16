@@ -45,6 +45,9 @@
 - Added `src/minesweeper/webhook_app.py` as a reusable low-latency webhook
   processor module (signature verification, payload parsing, and routing into
   existing game handlers), with tests in `tests/test_webhook_app.py`.
+- Added `src/minesweeper/webhook_server.py` and `tests/test_webhook_server.py`
+  for `/webhook` HTTP delivery handling, plus `make webhook-serve` for local
+  runtime.
 
 ## Notes
 

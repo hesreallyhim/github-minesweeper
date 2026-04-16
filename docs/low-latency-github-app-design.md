@@ -88,9 +88,11 @@ GitHub comments.
 - [x] Add reusable webhook processor module (`src/minesweeper/webhook_app.py`)
       with signature verification, payload parsing, and event routing through
       existing handlers.
-- [ ] Add HTTP server route (`/webhook`) that uses `webhook_app`.
+- [x] Add HTTP server route (`/webhook`) in
+      `src/minesweeper/webhook_server.py`.
 - [ ] Add GitHub App auth helper (JWT -> installation token).
-- [ ] Add minimal REST adapter currently using stdlib HTTP.
+- [x] Reuse existing stdlib GitHub REST calls from `entrypoints` as side
+      effect adapters.
 
 ### Phase B: Handler Reuse
 
@@ -117,4 +119,6 @@ GitHub comments.
 - [x] Regression tests added for `move N + 1` preserving `move N`.
 - [x] Webhook processing scaffold added with tests:
       `tests/test_webhook_app.py`.
-- [ ] HTTP webhook server + GitHub App installation-token auth pending.
+- [x] HTTP webhook server delivery handling added with tests:
+      `tests/test_webhook_server.py`.
+- [ ] GitHub App installation-token auth pending.
