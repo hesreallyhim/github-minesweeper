@@ -1,6 +1,6 @@
 # STATUS
 
-- Updated: 2026-04-10
+- Updated: 2026-04-16
 - Branch: `main`
 - State: All phases complete
 
@@ -29,6 +29,19 @@
 - 148 tests passing, all lint checks pass
 - Docker build not exercised in this sandbox (no Docker runtime available),
   but Dockerfile is prepared and tested via review
+
+## Latest Incremental Updates (2026-04-16)
+
+- Fixed issue-comment race where `move N+1` could be computed from stale state
+  and fail to reflect `move N`.
+- `src/minesweeper/entrypoints.py` now reconciles by replaying missing owner
+  commands between latest signed state and current comment before applying
+  the current move.
+- Added regression tests in `tests/test_entrypoints.py` for:
+  - reconciliation replay behavior
+  - full `room_comment_entrypoint` preservation of prior move state
+- Added `docs/low-latency-github-app-design.md` with a concrete low-latency
+  GitHub App architecture and phased implementation plan.
 
 ## Notes
 

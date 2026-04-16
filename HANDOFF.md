@@ -1,5 +1,17 @@
 # HANDOFF
 
+## Incremental Updates (2026-04-16)
+
+- Resolved `move N + 1` race by reconciling missing prior owner commands in
+  `room_comment_entrypoint` before applying the current move. This prevents
+  stale-state progression when workflow runs arrive out of order.
+- Added `tests/test_entrypoints.py` regression coverage for:
+  - replay of missing owner commands into prior state
+  - full entrypoint processing that preserves `move N` in `move N+1` output
+- Added `docs/low-latency-github-app-design.md` capturing the low-latency
+  GitHub App webhook architecture, constraints, latency budget, and phased
+  implementation plan.
+
 ## Completed
 
 - Phase 0 Planning Freeze: product control documents locked.
