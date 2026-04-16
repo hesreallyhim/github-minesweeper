@@ -17,6 +17,11 @@
 - Added `src/minesweeper/webhook_server.py`, `tests/test_webhook_server.py`,
   and `make webhook-serve` for a runnable `/webhook` HTTP path using the
   webhook processor scaffold.
+- Added an experimental Cloudflare Worker runtime in `edge-worker/` with
+  webhook signature verification, direct GitHub API comment/label updates,
+  signed state-chain processing, and move reconciliation for race safety.
+- Added `docs/cloudflare-worker-setup.md` for auth, secrets, deployment, and
+  staged rollout guidance.
 
 ## Completed
 

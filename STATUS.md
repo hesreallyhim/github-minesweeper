@@ -48,6 +48,11 @@
 - Added `src/minesweeper/webhook_server.py` and `tests/test_webhook_server.py`
   for `/webhook` HTTP delivery handling, plus `make webhook-serve` for local
   runtime.
+- Added Cloudflare Worker scaffold and implementation under `edge-worker/` for
+  experimental low-latency webhook handling (`issues.opened` and
+  `issue_comment.created`) with signed-state chain and race reconciliation.
+- Added `docs/cloudflare-worker-setup.md` with Wrangler auth, secrets, deploy,
+  and rollout steps.
 
 ## Notes
 

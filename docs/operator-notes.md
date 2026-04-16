@@ -62,6 +62,9 @@ Four GitHub Actions workflows handle the game loop:
   manually dispatchable). Rebuilds README leaderboard cards and
   `data/leaderboards.json` from terminal game records in `data/games/`.
 
+An experimental low-latency Cloudflare Worker path is also available under
+`edge-worker/`. See `docs/cloudflare-worker-setup.md`.
+
 Terminal game records are written as one JSON file per issue:
 
 - `data/games/<issue_number>.json`

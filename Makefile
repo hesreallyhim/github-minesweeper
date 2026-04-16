@@ -10,7 +10,7 @@ MYPY := $(VENV_BIN)/mypy
 
 .DEFAULT_GOAL := help
 
-.PHONY: help venv bootstrap test lint typecheck simulate-room leaderboard-build leaderboard-reset docker-build docker-test docker-replay webhook-serve clean
+.PHONY: help venv bootstrap test lint typecheck simulate-room leaderboard-build leaderboard-reset docker-build docker-test docker-replay webhook-serve edge-worker-install edge-worker-typecheck edge-worker-dev edge-worker-deploy clean
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*## "; print "Targets:"} /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -70,6 +70,18 @@ docker-replay: docker-build ## Replay fixtures inside Docker
 
 webhook-serve: bootstrap ## Run the local webhook HTTP server
 	PYTHONPATH=src $(VENV_PYTHON) -m minesweeper.webhook_server
+
+edge-worker-install: ## Install Cloudflare Worker dependencies
+	cd edge-worker && npm install
+
+edge-worker-typecheck: ## Type-check Cloudflare Worker sources
+	cd edge-worker && npx tsc --noEmit
+
+edge-worker-dev: ## Run Cloudflare Worker locally via Wrangler
+	cd edge-worker && npx wrangler dev
+
+edge-worker-deploy: ## Deploy Cloudflare Worker via Wrangler
+	cd edge-worker && npx wrangler deploy
 
 clean: ## Remove local development caches
 	rm -rf $(VENV) .pytest_cache .mypy_cache .ruff_cache .coverage __pycache__
