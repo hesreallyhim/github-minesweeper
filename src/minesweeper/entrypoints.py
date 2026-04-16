@@ -17,11 +17,14 @@ import os
 import sys
 from typing import Any
 
+from minesweeper.commands import parse_command
 from minesweeper.github_events import (
     handle_click_dispatch,
     handle_issue_comment,
     handle_issue_opened,
 )
+from minesweeper.room_service import apply_move, load_state_from_comment
+from minesweeper.state import encode_state, extract_state_token
 
 TERMINAL_PHASES = {"won", "lost", "given_up"}
 
@@ -250,6 +253,141 @@ def _github_api_update_labels(
             pass
 
 
+def _github_api_list_issue_comments(
+    repo: str,
+    issue_number: int,
+    *,
+    per_page: int = 100,
+    direction: str = "asc",
+    max_pages: int | None = None,
+) -> list[dict[str, Any]]:
+    """List issue comments via the GitHub REST API."""
+    import urllib.request
+
+    token = os.environ.get("GITHUB_TOKEN", "")
+    if not token:
+        return []
+
+    comments: list[dict[str, Any]] = []
+    page = 1
+    while True:
+        url = (
+            f"https://api.github.com/repos/{repo}"
+            f"/issues/{issue_number}/comments"
+            f"?per_page={per_page}&sort=created&direction={direction}&page={page}"
+        )
+        req = urllib.request.Request(
+            url,
+            headers={
+                "Authorization": f"token {token}",
+                "Accept": "application/vnd.github+json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req) as resp:
+                batch = json.loads(resp.read().decode("utf-8"))
+        except Exception:
+            return []
+        if not isinstance(batch, list) or not batch:
+            break
+        comments.extend(batch)
+        if len(batch) < per_page:
+            break
+        if max_pages is not None and page >= max_pages:
+            break
+        page += 1
+    return comments
+
+
+def _as_int(value: Any, default: int = 0) -> int:
+    """Best-effort integer conversion."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _reconcile_prior_comment_body_for_issue_comment(
+    *,
+    repo: str,
+    issue_number: int,
+    payload: dict[str, Any],
+) -> str | None:
+    """Return the prior state body, replaying any missing earlier commands.
+
+    This defends against event-order races where move N+1 is processed before
+    move N has posted its bot state comment.
+    """
+    comments = _github_api_list_issue_comments(repo, issue_number)
+    if not comments:
+        return None
+
+    latest_state_comment: dict[str, Any] | None = None
+    latest_state_body: str | None = None
+    for comment in comments:
+        body = str(comment.get("body", ""))
+        if extract_state_token(body) is not None:
+            latest_state_comment = comment
+            latest_state_body = body
+
+    if latest_state_comment is None or latest_state_body is None:
+        return None
+
+    secret = os.environ.get(
+        "MINESWEEPER_SECRET", "dev-secret-do-not-use-in-prod"
+    )
+    state = load_state_from_comment(latest_state_body, secret)
+    if state is None:
+        return latest_state_body
+
+    current_comment = payload.get("comment", {})
+    current_comment_id = _as_int(current_comment.get("id"))
+    if current_comment_id <= 0:
+        return latest_state_body
+
+    baseline_comment_id = _as_int(latest_state_comment.get("id"))
+    owner = str(state.get("owner", "")).strip().lower()
+    processed_ids = {
+        _as_int(comment_id)
+        for comment_id in state.get("processed_comment_ids", [])
+    }
+    replayed = False
+
+    for comment in comments:
+        comment_id = _as_int(comment.get("id"))
+        if comment_id <= baseline_comment_id or comment_id >= current_comment_id:
+            continue
+        if comment_id in processed_ids:
+            continue
+
+        user = comment.get("user")
+        if not isinstance(user, dict):
+            continue
+        if bool(user.get("bot")):
+            continue
+        if owner and str(user.get("login", "")).strip().lower() != owner:
+            continue
+
+        command = parse_command(str(comment.get("body", "")))
+        if command is None:
+            continue
+
+        move = apply_move(state, command, comment_id, secret=secret)
+        next_state = move.get("state")
+        if not isinstance(next_state, dict):
+            continue
+        state = next_state
+        processed_ids = {
+            _as_int(comment_id)
+            for comment_id in state.get("processed_comment_ids", [])
+        }
+        replayed = True
+
+    if not replayed:
+        return latest_state_body
+    return encode_state(state, secret)
+
+
 def _fetch_latest_bot_comment(
     repo: str, issue_number: int
 ) -> str | None:
@@ -257,33 +395,15 @@ def _fetch_latest_bot_comment(
 
     Scans comments in reverse order looking for the state marker.
     """
-    import urllib.request
-
-    from minesweeper.state import extract_state_token
-
-    token = os.environ.get("GITHUB_TOKEN", "")
-    if not token:
-        return None
-
-    url = (
-        f"https://api.github.com/repos/{repo}"
-        f"/issues/{issue_number}/comments?per_page=30&sort=created&direction=desc"
+    comments = _github_api_list_issue_comments(
+        repo,
+        issue_number,
+        per_page=30,
+        direction="desc",
+        max_pages=1,
     )
-    req = urllib.request.Request(
-        url,
-        headers={
-            "Authorization": f"token {token}",
-            "Accept": "application/vnd.github+json",
-        },
-    )
-    try:
-        with urllib.request.urlopen(req) as resp:
-            comments = json.loads(resp.read().decode("utf-8"))
-    except Exception:
-        return None
-
-    for c in comments:
-        body = c.get("body", "")
+    for comment in comments:
+        body = str(comment.get("body", ""))
         if extract_state_token(body) is not None:
             return body
     return None
@@ -313,8 +433,12 @@ def room_comment_entrypoint() -> None:
     repo = payload.get("repository", {}).get("full_name", "")
     issue_number = payload.get("issue", {}).get("number", 0)
 
-    # Fetch the last bot comment with state
-    prior_body = _fetch_latest_bot_comment(repo, issue_number)
+    # Reconcile prior state against any missing earlier owner commands.
+    prior_body = _reconcile_prior_comment_body_for_issue_comment(
+        repo=repo,
+        issue_number=issue_number,
+        payload=payload,
+    )
 
     result = handle_issue_comment(
         payload, prior_comment_body=prior_body
