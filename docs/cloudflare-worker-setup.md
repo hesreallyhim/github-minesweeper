@@ -6,6 +6,9 @@
 This repo now includes a Cloudflare Worker implementation under
 `edge-worker/` that can process Minesweeper GitHub webhooks directly.
 
+This is a tentative path. Keep it lean and remove transition-only behavior once
+latency validation is complete.
+
 ## Why This Exists
 
 The Worker path removes GitHub Actions startup latency from the move hot path.
@@ -53,6 +56,14 @@ Notes:
   target repo.
 - `MINESWEEPER_SECRET`: same signing secret used for game state integrity.
 
+### Secret Operations
+
+- Set secrets in Cloudflare Worker only; never in source-controlled files.
+- Rotate `GITHUB_WEBHOOK_SECRET` and webhook setting together.
+- Rotate `GITHUB_PAT` and re-test comment/label writes immediately.
+- Keep `MINESWEEPER_SECRET` stable during active games; rotating it invalidates
+  all existing state chains.
+
 ## Optional Vars
 
 Configured in `wrangler.jsonc`:
@@ -91,12 +102,40 @@ After deploy, use the Worker URL as the GitHub webhook URL, for example:
 3. Set webhook secret to match `GITHUB_WEBHOOK_SECRET`.
 4. For test issues, apply label `game:minesweeper:edge`.
 
+## Tentative Compatibility Controls (Current)
+
+The following controls exist only for safe migration:
+
+- Edge-only issue label gate: `game:minesweeper:edge`
+- Parallel existence of Actions move workflows
+
+These are not long-term requirements.
+
 ## Rollout Guidance
 
 - Keep existing GitHub Actions workflows active while testing edge-labeled
   rooms only.
 - Once satisfied with latency and behavior, migrate issue templates to apply
   edge label by default and then retire the move workflows.
+
+### Promotion Criteria
+
+Promote Worker path to default when all are true:
+
+1. p95 move latency stays under 3s for normal play.
+2. No correctness regressions in state progression.
+3. No webhook signature/auth failures in normal operation.
+
+### Cleanup Plan (Post-Promotion)
+
+After promotion, remove transition-only compatibility behavior:
+
+1. Remove `game:minesweeper:edge` label gate from Worker.
+2. Disable and remove Actions move workflows:
+   - `.github/workflows/minesweeper-room-open.yml`
+   - `.github/workflows/minesweeper-room-comment.yml`
+   - `.github/workflows/minesweeper-room-click.yml`
+3. Remove any dual-path migration notes from docs.
 
 ## Known Constraints
 

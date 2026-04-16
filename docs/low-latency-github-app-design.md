@@ -15,6 +15,7 @@ the hot path while keeping game state and gameplay artifacts GitHub-native.
 - Authoritative state remains signed state token in bot comments.
 - No external database required.
 - GitHub API is the only required API surface for game data and writes.
+- Do not keep compatibility-only logic once migration is complete.
 
 ## Why This Path
 
@@ -112,6 +113,8 @@ GitHub comments.
 - [ ] Enable in one test repo.
 - [ ] Keep Actions workflows for leaderboard jobs; disable move handling
       workflows after verification.
+- [ ] Remove migration-only compatibility gates (edge label gate, dual-path docs)
+      once Worker path is promoted.
 
 ## Current Progress Snapshot
 

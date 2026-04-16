@@ -65,6 +65,10 @@ Four GitHub Actions workflows handle the game loop:
 An experimental low-latency Cloudflare Worker path is also available under
 `edge-worker/`. See `docs/cloudflare-worker-setup.md`.
 
+For now this is a tentative migration path. Compatibility scaffolding
+(edge-only label gate and dual runtime paths) should be removed after
+latency validation and promotion.
+
 Terminal game records are written as one JSON file per issue:
 
 - `data/games/<issue_number>.json`
