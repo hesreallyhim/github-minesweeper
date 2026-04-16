@@ -1,6 +1,6 @@
 # Low-Latency GitHub App Design
 
-- Status: draft
+- Status: in progress
 - Updated: 2026-04-16
 - Owner: maintainers
 
@@ -85,7 +85,10 @@ GitHub comments.
 
 ### Phase A: Runtime Scaffold
 
-- [ ] Add `app/webhook_server.py` with `/webhook` route.
+- [x] Add reusable webhook processor module (`src/minesweeper/webhook_app.py`)
+      with signature verification, payload parsing, and event routing through
+      existing handlers.
+- [ ] Add HTTP server route (`/webhook`) that uses `webhook_app`.
 - [ ] Add GitHub App auth helper (JWT -> installation token).
 - [ ] Add minimal REST adapter currently using stdlib HTTP.
 
@@ -112,4 +115,6 @@ GitHub comments.
 
 - [x] Reconciliation fix for out-of-order move processing merged in core path.
 - [x] Regression tests added for `move N + 1` preserving `move N`.
-- [ ] GitHub App runtime scaffold not started.
+- [x] Webhook processing scaffold added with tests:
+      `tests/test_webhook_app.py`.
+- [ ] HTTP webhook server + GitHub App installation-token auth pending.

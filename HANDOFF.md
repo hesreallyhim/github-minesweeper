@@ -11,6 +11,9 @@
 - Added `docs/low-latency-github-app-design.md` capturing the low-latency
   GitHub App webhook architecture, constraints, latency budget, and phased
   implementation plan.
+- Added `src/minesweeper/webhook_app.py` and `tests/test_webhook_app.py`
+  to scaffold low-latency webhook processing (signature verification, payload
+  parsing, and routing through existing handlers via injectable effectors).
 
 ## Completed
 

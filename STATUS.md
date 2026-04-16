@@ -42,6 +42,9 @@
   - full `room_comment_entrypoint` preservation of prior move state
 - Added `docs/low-latency-github-app-design.md` with a concrete low-latency
   GitHub App architecture and phased implementation plan.
+- Added `src/minesweeper/webhook_app.py` as a reusable low-latency webhook
+  processor module (signature verification, payload parsing, and routing into
+  existing game handlers), with tests in `tests/test_webhook_app.py`.
 
 ## Notes
 
