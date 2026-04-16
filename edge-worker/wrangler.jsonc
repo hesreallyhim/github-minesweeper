@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "github-minesweeper-webhook",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-16",
+  "vars": {
+    "GAME_ROWS": "9",
+    "GAME_COLS": "9",
+    "GAME_MINES": "10"
+  }
+}
