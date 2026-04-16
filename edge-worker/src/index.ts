@@ -922,7 +922,6 @@ export default {
     }
 
     const event = request.headers.get("X-GitHub-Event") ?? "";
-    const delivery = request.headers.get("X-GitHub-Delivery") ?? "";
     const hasSecret = Boolean(env.GITHUB_WEBHOOK_SECRET?.trim());
     if (!event) {
       return json(400, { error: "missing_event" });
@@ -963,14 +962,10 @@ export default {
       }
       return json(202, {
         status: "accepted",
-        delivery,
-        event,
         action: result.action,
-        result: result.result ?? null,
       });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "unknown";
-      return json(500, { error: "processing_failed", message });
+    } catch {
+      return json(500, { error: "processing_failed" });
     }
   },
 };

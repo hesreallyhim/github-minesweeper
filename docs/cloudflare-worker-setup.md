@@ -9,6 +9,9 @@ This repo now includes a Cloudflare Worker implementation under
 This is a tentative path. Keep it lean and remove transition-only behavior once
 latency validation is complete.
 
+For the data minimization and transmission policy for this path, see
+`PRIVACY.md`.
+
 ## Why This Exists
 
 The Worker path removes GitHub Actions startup latency from the move hot path.

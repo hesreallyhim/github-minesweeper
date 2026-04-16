@@ -152,6 +152,7 @@ make docker-build
 
 - [Gameplay Guide](docs/gameplay.md) — how to play
 - [Operator Notes](docs/operator-notes.md) — deployment and operations
+- [Privacy](PRIVACY.md) — data handling and transmission boundaries
 - [Click Relay Contract](docs/click-relay-contract.md) — dispatch payload and validation rules
 - [V1 Game Contract](docs/v1-game-contract.md) — implementation contract
 

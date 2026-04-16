@@ -5,6 +5,8 @@
 This document covers deployment and operational concerns for running
 GitHub Issue Minesweeper in a repository.
 
+For data handling and transmission boundaries, see `PRIVACY.md`.
+
 ## Requirements
 
 - A GitHub repository with Actions enabled.
