@@ -99,7 +99,7 @@ Coordinates are spreadsheet-style: column letter (A-I) + row number
 
 <!-- MS_LEADERBOARD_START -->
 ### Leaderboards
-_As of (UTC): n/a from 0 completed games_
+_As of (UTC): 2026-04-21T05:07:54+00:00 from 2 completed games_
 (Leaderboards update every 15 minutes)
 
 <table align="center">
@@ -112,8 +112,6 @@ _As of (UTC): n/a from 0 completed games_
     <td><picture><img src="assets/readme-leaderboard-card-consistency.svg" alt="Consistency Card" width="460" /></picture></td>
   </tr>
 </table>
-
-<em>No completed games yet.</em>
 <!-- MS_LEADERBOARD_END -->
 
 ## Project Structure

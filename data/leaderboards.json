@@ -1,8 +1,13 @@
 {
-  "generated_at": "n/a",
-  "source_games": 0,
+  "generated_at": "2026-04-21T05:07:54+00:00",
+  "source_games": 2,
   "min_games_for_rate": 3,
-  "most_games_completed": [],
+  "most_games_completed": [
+    {
+      "player": "hesreallyhim",
+      "games": 2
+    }
+  ],
   "most_wins": [],
   "wins_by_moves": [],
   "quick_clear": [],
