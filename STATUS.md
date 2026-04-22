@@ -1,6 +1,6 @@
 # STATUS
 
-- Updated: 2026-04-16
+- Updated: 2026-04-22
 - Branch: `main`
 - State: All phases complete
 
@@ -30,7 +30,21 @@
 - Docker build not exercised in this sandbox (no Docker runtime available),
   but Dockerfile is prepared and tested via review
 
-## Latest Incremental Updates (2026-04-16)
+## Latest Incremental Updates (2026-04-22)
+
+- Cloudflare Worker auth cutover now uses GitHub App JWT exchange for
+  installation access tokens (no PAT dependency) in
+  `edge-worker/src/index.ts`.
+- Added in-memory installation token caching in the Worker runtime to reduce
+  per-move auth exchange overhead.
+- Removed edge-only label compatibility gate from Worker move handling; Worker
+  now targets standard `game:minesweeper` rooms.
+- Updated operational docs for App-based webhook setup and secret requirements:
+  - `docs/cloudflare-worker-setup.md`
+  - `docs/operator-notes.md`
+  - `docs/low-latency-github-app-design.md`
+
+## Prior Incremental Updates (2026-04-16)
 
 - Fixed issue-comment race where `move N+1` could be computed from stale state
   and fail to reflect `move N`.

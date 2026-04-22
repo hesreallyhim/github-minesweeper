@@ -1,7 +1,7 @@
 # Low-Latency GitHub App Design
 
-- Status: in progress
-- Updated: 2026-04-16
+- Status: active implementation
+- Updated: 2026-04-22
 - Owner: maintainers
 
 ## Goal
@@ -91,15 +91,16 @@ GitHub comments.
       existing handlers.
 - [x] Add HTTP server route (`/webhook`) in
       `src/minesweeper/webhook_server.py`.
-- [ ] Add GitHub App auth helper (JWT -> installation token).
+- [x] Add GitHub App auth helper (JWT -> installation token) in
+      `edge-worker/src/index.ts`.
 - [x] Reuse existing stdlib GitHub REST calls from `entrypoints` as side
       effect adapters.
 
 ### Phase B: Handler Reuse
 
-- [ ] Route `issues.opened` -> `handle_issue_opened`.
-- [ ] Route `issue_comment.created` -> `handle_issue_comment`.
-- [ ] Reuse existing reconciliation path from `entrypoints`.
+- [x] Route `issues.opened` -> room creation in Worker runtime.
+- [x] Route `issue_comment.created` -> move handling in Worker runtime.
+- [x] Reuse reconciliation behavior for missing prior owner commands.
 
 ### Phase C: Operations
 
@@ -109,12 +110,9 @@ GitHub comments.
 
 ### Phase D: Rollout
 
-- [ ] Run webhook in shadow mode (log-only) against fixture replays.
-- [ ] Enable in one test repo.
+- [ ] Enable and validate live GitHub App webhook delivery.
 - [ ] Keep Actions workflows for leaderboard jobs; disable move handling
-      workflows after verification.
-- [ ] Remove migration-only compatibility gates (edge label gate, dual-path docs)
-      once Worker path is promoted.
+      workflows.
 
 ## Current Progress Snapshot
 
@@ -124,4 +122,5 @@ GitHub comments.
       `tests/test_webhook_app.py`.
 - [x] HTTP webhook server delivery handling added with tests:
       `tests/test_webhook_server.py`.
-- [ ] GitHub App installation-token auth pending.
+- [x] GitHub App JWT -> installation token exchange implemented in Worker.
+- [x] Installation token cache added (per-installation, in-memory).

@@ -9,18 +9,20 @@ For data handling and transmission boundaries, see `PRIVACY.md`.
 
 ## Requirements
 
-- A GitHub repository with Actions enabled.
-- A `GITHUB_TOKEN` secret (available by default in Actions).
+- A GitHub repository.
+- A GitHub App installed on the target repository (for webhook mode).
 - A `MINESWEEPER_SECRET` secret for signing game state tokens (HMAC-SHA256).
-- Python 3.11+ runtime in the Actions environment.
+- Python 3.11+ runtime in the Actions environment (leaderboard workflow).
 
 ## Secrets
 
 | Secret               | Purpose                                    |
 |----------------------|--------------------------------------------|
-| `GITHUB_TOKEN`       | Post bot comments, manage labels           |
+| `GITHUB_TOKEN`       | Actions auth (leaderboard workflow)        |
 | `MINESWEEPER_SECRET` | Sign and verify hidden game state tokens   |
 | `GITHUB_WEBHOOK_SECRET` | Verify GitHub App webhook signatures (webhook mode) |
+| `GITHUB_APP_ID`      | GitHub App identifier (webhook mode)       |
+| `GITHUB_APP_PRIVATE_KEY` | GitHub App private key PEM (webhook mode) |
 
 The `MINESWEEPER_SECRET` should be a random string of at least 32
 characters. Generate one with:
@@ -47,29 +49,30 @@ The following labels should exist in the repository:
 | `game:minesweeper:lost`     | Completed room (player lost)|
 | `game:minesweeper:archived` | Archived/given-up room      |
 
-## Workflows
+## Runtime Paths
 
-Four GitHub Actions workflows handle the game loop:
+Game loop handling should run in Cloudflare Worker webhook mode for low latency:
 
-- **minesweeper-room-open.yml** — Triggered when an issue with the
-  `game:minesweeper` label is opened. Initializes the room and posts the
-  first board.
-- **minesweeper-room-comment.yml** — Triggered when a comment is created
-  on an issue with the `game:minesweeper` label. Parses the command,
-  applies the move, and posts the updated board.
-- **minesweeper-room-click.yml** — Triggered by `repository_dispatch`
-  type `minesweeper-click` (from an authenticated relay). Validates the
-  signed click token and applies one move.
+- Cloudflare Worker endpoint: `POST /webhook`
+- GitHub App webhook events:
+  - `issues`
+  - `issue_comment`
+- GitHub App permissions:
+  - `Issues`: Read and write
+  - `Metadata`: Read
+
+GitHub Actions remain for leaderboard publishing:
+
 - **minesweeper-leaderboards.yml** — Scheduled every 15 minutes (and
   manually dispatchable). Rebuilds README leaderboard cards and
   `data/leaderboards.json` from terminal game records in `data/games/`.
 
-An experimental low-latency Cloudflare Worker path is also available under
-`edge-worker/`. See `docs/cloudflare-worker-setup.md`.
+To avoid duplicate move processing, disable move workflows once webhook mode is
+enabled:
 
-For now this is a tentative migration path. Compatibility scaffolding
-(edge-only label gate and dual runtime paths) should be removed after
-latency validation and promotion.
+- `.github/workflows/minesweeper-room-open.yml`
+- `.github/workflows/minesweeper-room-comment.yml`
+- `.github/workflows/minesweeper-room-click.yml`
 
 Terminal game records are written as one JSON file per issue:
 
@@ -151,3 +154,5 @@ live smoke testing.
   terminal records and that `minesweeper-leaderboards.yml` has run.
 - **Webhook mode signature failures**: Ensure `GITHUB_WEBHOOK_SECRET`
   matches the webhook secret configured on the GitHub App.
+- **GitHub auth failures in webhook mode**: Verify `GITHUB_APP_ID`,
+  `GITHUB_APP_PRIVATE_KEY`, and App installation on the repository.

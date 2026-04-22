@@ -1,6 +1,19 @@
 # HANDOFF
 
-## Incremental Updates (2026-04-16)
+## Incremental Updates (2026-04-22)
+
+- Switched Cloudflare Worker GitHub auth from PAT-based calls to GitHub App
+  JWT exchange + installation access tokens in `edge-worker/src/index.ts`.
+- Added per-installation in-memory token cache in Worker runtime to cut
+  repeated token exchange overhead on hot paths.
+- Removed `game:minesweeper:edge` compatibility gate in Worker move handling;
+  worker now processes standard `game:minesweeper` rooms.
+- Updated App-based operator/setup docs:
+  - `docs/cloudflare-worker-setup.md`
+  - `docs/operator-notes.md`
+  - `docs/low-latency-github-app-design.md`
+
+## Prior Incremental Updates (2026-04-16)
 
 - Resolved `move N + 1` race by reconciling missing prior owner commands in
   `room_comment_entrypoint` before applying the current move. This prevents

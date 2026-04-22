@@ -1,11 +1,11 @@
 interface Env {
   GITHUB_WEBHOOK_SECRET: string;
-  GITHUB_PAT: string;
+  GITHUB_APP_ID: string;
+  GITHUB_APP_PRIVATE_KEY: string;
   MINESWEEPER_SECRET: string;
   GAME_ROWS: string;
   GAME_COLS: string;
   GAME_MINES: string;
-  EDGE_LABEL?: string;
 }
 
 type CellState = "hidden" | "revealed" | "flagged";
@@ -42,10 +42,15 @@ interface GameStateV1 {
   processed_comment_ids: number[];
 }
 
+type InstallationTokenCacheEntry = {
+  token: string;
+  expiresAtMs: number;
+};
+
 const STATE_MARKER = "MINESWEEPER_STATE_V1";
 const COMMAND_REMINDER =
   "**Commands:** `/reveal B3` · `/flag H7` · `/unflag H7` · `/chord C4` · `/giveup`";
-const DEFAULT_EDGE_LABEL = "game:minesweeper:edge";
+const ACTIVE_GAME_LABEL = "game:minesweeper";
 const CMD_RE = /\/(reveal|flag|unflag|chord|giveup)\b\s*(\S*)/i;
 const IMPLICIT_REVEAL_RE = /^\s*`?([A-Za-z]\d+|\d+[A-Za-z])`?\s*$/;
 const COL_ROW_RE = /^([A-Za-z])(\d+)$/;
@@ -56,6 +61,9 @@ const STATE_TOKEN_RE = new RegExp(
 
 const TEXT_ENCODER = new TextEncoder();
 const TEXT_DECODER = new TextDecoder();
+const APP_JWT_TTL_SECONDS = 9 * 60;
+const TOKEN_CACHE_SKEW_MS = 60_000;
+const installationTokenCache = new Map<number, InstallationTokenCacheEntry>();
 
 function json(status: number, payload: unknown): Response {
   return new Response(JSON.stringify(payload), {
@@ -71,11 +79,6 @@ function parseIntOr(raw: string | undefined, fallback: number): number {
   return v;
 }
 
-function getEdgeLabel(env: Env): string {
-  const raw = env.EDGE_LABEL?.trim();
-  return raw && raw.length > 0 ? raw : DEFAULT_EDGE_LABEL;
-}
-
 function labelsFromIssue(payload: Record<string, unknown>): string[] {
   const issue = asObject(payload.issue);
   const labels = Array.isArray(issue?.labels) ? issue.labels : [];
@@ -89,6 +92,11 @@ function labelsFromIssue(payload: Record<string, unknown>): string[] {
 
 function asObject(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" ? (v as Record<string, unknown>) : null;
+}
+
+function getInstallationId(payload: Record<string, unknown>): number {
+  const installation = asObject(payload.installation);
+  return Number(installation?.id ?? 0);
 }
 
 function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
@@ -132,6 +140,19 @@ function stableJsonStringify(value: unknown): string {
   return `{${parts.join(",")}}`;
 }
 
+function pemToDerBytes(privateKeyPem: string): Uint8Array {
+  const normalized = privateKeyPem
+    .replace(/-----BEGIN [^-]+-----/g, "")
+    .replace(/-----END [^-]+-----/g, "")
+    .replace(/\s+/g, "");
+  const binary = atob(normalized);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 async function hmacSha256(secret: string, message: string): Promise<Uint8Array> {
   const key = await crypto.subtle.importKey(
     "raw",
@@ -142,6 +163,84 @@ async function hmacSha256(secret: string, message: string): Promise<Uint8Array> 
   );
   const sig = await crypto.subtle.sign("HMAC", key, TEXT_ENCODER.encode(message));
   return new Uint8Array(sig);
+}
+
+async function rs256Sign(privateKeyPem: string, message: string): Promise<Uint8Array> {
+  const derBytes = pemToDerBytes(privateKeyPem);
+  const derBuffer = (new Uint8Array(derBytes)).buffer as ArrayBuffer;
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    derBuffer,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, TEXT_ENCODER.encode(message));
+  return new Uint8Array(signature);
+}
+
+function encodeJwtSegment(value: Record<string, unknown>): string {
+  return b64urlEncode(TEXT_ENCODER.encode(JSON.stringify(value)));
+}
+
+async function createGitHubAppJwt(appId: string, privateKeyPem: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: "RS256", typ: "JWT" };
+  const payload = {
+    iat: now - 60,
+    exp: now + APP_JWT_TTL_SECONDS,
+    iss: appId,
+  };
+  const unsigned = `${encodeJwtSegment(header)}.${encodeJwtSegment(payload)}`;
+  const signature = await rs256Sign(privateKeyPem, unsigned);
+  return `${unsigned}.${b64urlEncode(signature)}`;
+}
+
+async function githubApiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(`https://api.github.com${path}`, {
+    ...init,
+    headers: {
+      accept: "application/vnd.github+json",
+      "x-github-api-version": "2022-11-28",
+      ...(init.headers ?? {}),
+    },
+  });
+}
+
+async function getInstallationToken(
+  env: Env,
+  installationId: number,
+): Promise<string> {
+  const cached = installationTokenCache.get(installationId);
+  const now = Date.now();
+  if (cached && cached.expiresAtMs - TOKEN_CACHE_SKEW_MS > now) {
+    return cached.token;
+  }
+
+  const appJwt = await createGitHubAppJwt(env.GITHUB_APP_ID, env.GITHUB_APP_PRIVATE_KEY);
+  const response = await githubApiFetch(`/app/installations/${installationId}/access_tokens`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${appJwt}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) {
+    throw new Error(`token_exchange_failed_${response.status}`);
+  }
+  const payload = asObject(await response.json());
+  const token = typeof payload?.token === "string" ? payload.token : "";
+  if (!token) {
+    throw new Error("token_exchange_missing_token");
+  }
+  const expiresAtRaw = typeof payload?.expires_at === "string" ? payload.expires_at : "";
+  const expiresAtMs = Date.parse(expiresAtRaw);
+  installationTokenCache.set(installationId, {
+    token,
+    expiresAtMs: Number.isNaN(expiresAtMs) ? now + (50 * 60 * 1000) : expiresAtMs,
+  });
+  return token;
 }
 
 async function verifyWebhookSignature(
@@ -579,24 +678,22 @@ async function decodeStateFromComment(
 }
 
 async function ghFetch(
-  env: Env,
+  githubToken: string,
   repo: string,
   path: string,
   init: RequestInit = {},
 ): Promise<Response> {
-  return fetch(`https://api.github.com/repos/${repo}${path}`, {
+  return githubApiFetch(`/repos/${repo}${path}`, {
     ...init,
     headers: {
-      accept: "application/vnd.github+json",
-      authorization: `Bearer ${env.GITHUB_PAT}`,
-      "x-github-api-version": "2022-11-28",
+      authorization: `Bearer ${githubToken}`,
       ...(init.headers ?? {}),
     },
   });
 }
 
 async function listIssueComments(
-  env: Env,
+  githubToken: string,
   repo: string,
   issueNumber: number,
 ): Promise<GitHubIssueComment[]> {
@@ -604,7 +701,7 @@ async function listIssueComments(
   let page = 1;
   while (true) {
     const resp = await ghFetch(
-      env,
+      githubToken,
       repo,
       `/issues/${issueNumber}/comments?per_page=100&sort=created&direction=asc&page=${page}`,
     );
@@ -634,12 +731,12 @@ async function listIssueComments(
 }
 
 async function postIssueComment(
-  env: Env,
+  githubToken: string,
   repo: string,
   issueNumber: number,
   body: string,
 ): Promise<void> {
-  await ghFetch(env, repo, `/issues/${issueNumber}/comments`, {
+  await ghFetch(githubToken, repo, `/issues/${issueNumber}/comments`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ body }),
@@ -647,21 +744,21 @@ async function postIssueComment(
 }
 
 async function updateLabels(
-  env: Env,
+  githubToken: string,
   repo: string,
   issueNumber: number,
   add: string[],
   remove: string[],
 ): Promise<void> {
   for (const label of add) {
-    await ghFetch(env, repo, `/issues/${issueNumber}/labels`, {
+    await ghFetch(githubToken, repo, `/issues/${issueNumber}/labels`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ labels: [label] }),
     });
   }
   for (const label of remove) {
-    await ghFetch(env, repo, `/issues/${issueNumber}/labels/${encodeURIComponent(label)}`, {
+    await ghFetch(githubToken, repo, `/issues/${issueNumber}/labels/${encodeURIComponent(label)}`, {
       method: "DELETE",
     });
   }
@@ -703,7 +800,7 @@ async function createRoomBody(
   return {
     body: `${content}\n\n${marker}`,
     state,
-    labelsAdd: ["game:minesweeper", getEdgeLabel(env)],
+    labelsAdd: [ACTIVE_GAME_LABEL],
   };
 }
 
@@ -821,6 +918,7 @@ async function reconcileStateBeforeComment(
 
 async function handleIssuesOpened(
   env: Env,
+  githubToken: string,
   payload: Record<string, unknown>,
 ): Promise<{ action: string; result?: string | null }> {
   if (payload.action !== "opened") return { action: "ignored" };
@@ -828,20 +926,21 @@ async function handleIssuesOpened(
   const repoObj = asObject(payload.repository);
   if (!issue || !repoObj) return { action: "invalid_payload" };
   const labels = labelsFromIssue(payload);
-  if (!labels.includes(getEdgeLabel(env))) return { action: "ignored_no_edge_label" };
+  if (!labels.includes(ACTIVE_GAME_LABEL)) return { action: "ignored_no_game_label" };
   const issueNumber = Number(issue.number ?? 0);
   const owner = typeof asObject(issue.user)?.login === "string" ? (asObject(issue.user)?.login as string) : "";
   const repo = typeof repoObj.full_name === "string" ? repoObj.full_name : "";
   if (!issueNumber || !owner || !repo) return { action: "invalid_payload" };
 
   const room = await createRoomBody(env, repo, issueNumber, owner);
-  await postIssueComment(env, repo, issueNumber, room.body);
-  await updateLabels(env, repo, issueNumber, room.labelsAdd, []);
+  await postIssueComment(githubToken, repo, issueNumber, room.body);
+  await updateLabels(githubToken, repo, issueNumber, room.labelsAdd, []);
   return { action: "create_room", result: "ok" };
 }
 
 async function handleIssueCommentCreated(
   env: Env,
+  githubToken: string,
   payload: Record<string, unknown>,
 ): Promise<{ action: string; result?: string | null }> {
   if (payload.action !== "created") return { action: "ignored" };
@@ -852,7 +951,7 @@ async function handleIssueCommentCreated(
   if (!issue || !comment || !sender || !repoObj) return { action: "invalid_payload" };
 
   const labels = labelsFromIssue(payload);
-  if (!labels.includes(getEdgeLabel(env))) return { action: "ignored_no_edge_label" };
+  if (!labels.includes(ACTIVE_GAME_LABEL)) return { action: "ignored_no_game_label" };
   if (Boolean(asObject(comment.user)?.bot)) return { action: "ignored_bot_comment" };
 
   const issueNumber = Number(issue.number ?? 0);
@@ -863,7 +962,7 @@ async function handleIssueCommentCreated(
   const commentBody = typeof comment.body === "string" ? comment.body : "";
   if (!issueNumber || !repo || !owner || !commentId) return { action: "invalid_payload" };
 
-  const allComments = await listIssueComments(env, repo, issueNumber);
+  const allComments = await listIssueComments(githubToken, repo, issueNumber);
   let baseComment: GitHubIssueComment | null = null;
   let baseState: GameStateV1 | null = null;
   for (const row of allComments) {
@@ -876,7 +975,7 @@ async function handleIssueCommentCreated(
   }
   if (!baseComment || !baseState) {
     await postIssueComment(
-      env,
+      githubToken,
       repo,
       issueNumber,
       "Could not find the game state. The room may be corrupted or the bot comment was deleted.",
@@ -887,13 +986,13 @@ async function handleIssueCommentCreated(
     return { action: "ignored_non_edge_state" };
   }
   if (senderLogin.toLowerCase() !== baseState.owner.toLowerCase()) {
-    await postIssueComment(env, repo, issueNumber, renderNonOwnerResponse(senderLogin));
+    await postIssueComment(githubToken, repo, issueNumber, renderNonOwnerResponse(senderLogin));
     return { action: "non_owner", result: null };
   }
 
   const parsed = parseCommand(commentBody);
   if (!parsed) {
-    await postIssueComment(env, repo, issueNumber, renderMalformedCommand());
+    await postIssueComment(githubToken, repo, issueNumber, renderMalformedCommand());
     return { action: "no_command", result: null };
   }
 
@@ -906,8 +1005,8 @@ async function handleIssueCommentCreated(
   );
   const move = await applyMove(env, reconciled, parsed, commentId);
   if (move.body) {
-    await postIssueComment(env, repo, issueNumber, move.body);
-    await updateLabels(env, repo, issueNumber, move.labelsAdd, move.labelsRemove);
+    await postIssueComment(githubToken, repo, issueNumber, move.body);
+    await updateLabels(githubToken, repo, issueNumber, move.labelsAdd, move.labelsRemove);
   }
   return { action: "move", result: move.result };
 }
@@ -930,7 +1029,11 @@ export default {
       return json(500, { error: "missing_webhook_secret" });
     }
 
-    if (!env.GITHUB_PAT || !env.MINESWEEPER_SECRET) {
+    if (
+      !env.GITHUB_APP_ID
+      || !env.GITHUB_APP_PRIVATE_KEY
+      || !env.MINESWEEPER_SECRET
+    ) {
       return json(500, { error: "missing_worker_secrets" });
     }
 
@@ -953,10 +1056,17 @@ export default {
 
     try {
       let result: { action: string; result?: string | null };
-      if (event === "issues") {
-        result = await handleIssuesOpened(env, payload);
-      } else if (event === "issue_comment") {
-        result = await handleIssueCommentCreated(env, payload);
+      if (event === "issues" || event === "issue_comment") {
+        const installationId = getInstallationId(payload);
+        if (!installationId) {
+          return json(400, { error: "missing_installation" });
+        }
+        const githubToken = await getInstallationToken(env, installationId);
+        if (event === "issues") {
+          result = await handleIssuesOpened(env, githubToken, payload);
+        } else {
+          result = await handleIssueCommentCreated(env, githubToken, payload);
+        }
       } else {
         result = { action: "ignored_event" };
       }
