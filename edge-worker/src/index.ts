@@ -200,6 +200,7 @@ async function githubApiFetch(path: string, init: RequestInit = {}): Promise<Res
   return fetch(`https://api.github.com${path}`, {
     ...init,
     headers: {
+      "user-agent": "github-minesweeper-webhook",
       accept: "application/vnd.github+json",
       "x-github-api-version": "2022-11-28",
       ...(init.headers ?? {}),
@@ -227,7 +228,8 @@ async function getInstallationToken(
     body: JSON.stringify({}),
   });
   if (!response.ok) {
-    throw new Error(`token_exchange_failed_${response.status}`);
+    const errText = await response.text();
+    throw new Error(`token_exchange_failed_${response.status}:${errText}`);
   }
   const payload = asObject(await response.json());
   const token = typeof payload?.token === "string" ? payload.token : "";
@@ -958,9 +960,13 @@ async function handleIssueCommentCreated(
   const repo = typeof repoObj.full_name === "string" ? repoObj.full_name : "";
   const owner = typeof asObject(issue.user)?.login === "string" ? (asObject(issue.user)?.login as string) : "";
   const senderLogin = typeof sender.login === "string" ? sender.login : "";
+  const senderType = typeof sender.type === "string" ? sender.type : "";
   const commentId = Number(comment.id ?? 0);
   const commentBody = typeof comment.body === "string" ? comment.body : "";
   if (!issueNumber || !repo || !owner || !commentId) return { action: "invalid_payload" };
+  if (senderType !== "User" || senderLogin.toLowerCase().endsWith("[bot]")) {
+    return { action: "ignored_bot_sender" };
+  }
 
   const allComments = await listIssueComments(githubToken, repo, issueNumber);
   let baseComment: GitHubIssueComment | null = null;
@@ -1074,7 +1080,9 @@ export default {
         status: "accepted",
         action: result.action,
       });
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("processing_failed", { event, message });
       return json(500, { error: "processing_failed" });
     }
   },
