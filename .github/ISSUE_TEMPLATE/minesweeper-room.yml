@@ -9,19 +9,20 @@ body:
       value: |
         **A new Minesweeper room will be created for you.**
 
-        Once you submit this issue, a bot will post a fresh 9x9 board.
         Play by commenting commands:
 
-        - `/reveal B3` — reveal a cell
-        - `/flag H7` — flag a suspected mine
-        - `/unflag H7` — remove a flag
-        - `/chord C4` — chord-reveal around a numbered cell
-        - `/giveup` — end the game
+        - `A1 B2` or `guess A1 A2` - reveal cell(s)
+        - `flag H7 H8` - flag suspected mine(s)
+        - `unflag H7` - remove flag(s)
+        - `giveup` - end the game
+
+        Notes:
+        - Commands are case-insensitive.
+        - Use one action per line.
+        - Any unrecognized token invalidates the whole turn.
+        - Slash prefixes are optional (for example, `/flag A1`).
 
         Only you (the issue opener) can play in this room.
-
-        We don't currently support "saved games" - you will have 30 minutes before your game room is closed.
-        Please only keep one open issue at a time.
 
   - type: checkboxes
     id: conduct
