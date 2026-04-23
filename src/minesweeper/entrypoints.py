@@ -17,7 +17,7 @@ import os
 import sys
 from typing import Any
 
-from minesweeper.commands import parse_command
+from minesweeper.commands import parse_turn
 from minesweeper.github_events import (
     handle_click_dispatch,
     handle_issue_comment,
@@ -368,11 +368,11 @@ def _reconcile_prior_comment_body_for_issue_comment(
         if owner and str(user.get("login", "")).strip().lower() != owner:
             continue
 
-        command = parse_command(str(comment.get("body", "")))
-        if command is None:
+        turn = parse_turn(str(comment.get("body", "")))
+        if turn is None:
             continue
 
-        move = apply_move(state, command, comment_id, secret=secret)
+        move = apply_move(state, turn, comment_id, secret=secret)
         next_state = move.get("state")
         if not isinstance(next_state, dict):
             continue

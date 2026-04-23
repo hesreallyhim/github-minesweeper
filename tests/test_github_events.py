@@ -148,6 +148,93 @@ class TestHandleIssueComment:
         assert state["seq"] == 1
         assert len(state["flagged"]) > 0 or result["result"] == "no_op"
 
+    def test_owner_multi_cell_flag_without_slash(self):
+        from minesweeper.coords import parse_coord
+
+        prior_body = self._create_room()
+        payload = load_fixture("owner-flag.json")
+        payload = dict(payload)
+        payload["comment"] = dict(payload["comment"])
+        payload["comment"]["id"] = 111
+        payload["comment"]["body"] = "flag A1 B2"
+
+        result = handle_issue_comment(
+            payload, prior_comment_body=prior_body, secret=TEST_SECRET
+        )
+
+        assert result["action"] == "move"
+        assert result["result"] == "ok"
+        state = result["state"]
+        flagged = {tuple(cell) for cell in state["flagged"]}
+        assert parse_coord("A1", 9, 9) in flagged
+        assert parse_coord("B2", 9, 9) in flagged
+        assert state["seq"] == 1
+
+    def test_owner_mixed_multi_line_turn(self):
+        from minesweeper.coords import coord_to_label
+        from minesweeper.engine import Board
+
+        prior_body = self._create_room()
+        payload = load_fixture("owner-reveal.json")
+        payload = dict(payload)
+        payload["comment"] = dict(payload["comment"])
+        payload["comment"]["id"] = 112
+
+        board = Board(9, 9, 10, TEST_SEED)
+        reveal_cell = next(
+            (r, c)
+            for r in range(9)
+            for c in range(9)
+            if not board.mine_grid[r][c] and board.adj_counts[r][c] > 0
+        )
+        mine_cell = sorted(board.mine_set)[0]
+        reveal_label = coord_to_label(*reveal_cell)
+        mine_label = coord_to_label(*mine_cell)
+        payload["comment"]["body"] = f"guess {reveal_label}\nflag {mine_label}"
+
+        result = handle_issue_comment(
+            payload, prior_comment_body=prior_body, secret=TEST_SECRET
+        )
+
+        assert result["action"] == "move"
+        assert result["result"] == "ok"
+        state = result["state"]
+        revealed = {tuple(cell) for cell in state["revealed"]}
+        flagged = {tuple(cell) for cell in state["flagged"]}
+        assert reveal_cell in revealed
+        assert mine_cell in flagged
+        assert state["seq"] == 1
+
+    def test_rejects_mixed_actions_on_one_line(self):
+        prior_body = self._create_room()
+        payload = load_fixture("owner-flag.json")
+        payload = dict(payload)
+        payload["comment"] = dict(payload["comment"])
+        payload["comment"]["id"] = 113
+        payload["comment"]["body"] = "flag A1 A4 reveal B3"
+
+        result = handle_issue_comment(
+            payload, prior_comment_body=prior_body, secret=TEST_SECRET
+        )
+
+        assert result["action"] == "no_command"
+        assert "one action per line" in result["body"]
+
+    def test_rejects_turn_with_non_parseable_token(self):
+        prior_body = self._create_room()
+        payload = load_fixture("owner-flag.json")
+        payload = dict(payload)
+        payload["comment"] = dict(payload["comment"])
+        payload["comment"]["id"] = 114
+        payload["comment"]["body"] = "reveal A1 B2 3"
+
+        result = handle_issue_comment(
+            payload, prior_comment_body=prior_body, secret=TEST_SECRET
+        )
+
+        assert result["action"] == "no_command"
+        assert "didn't recognize" in result["body"]
+
     def test_non_owner_rejected(self):
         prior_body = self._create_room()
         payload = load_fixture("non-owner-command.json")

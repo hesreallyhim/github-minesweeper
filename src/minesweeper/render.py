@@ -29,8 +29,8 @@ SYMBOLS = {
 }
 
 COMMAND_REMINDER = (
-    "**Commands:** `/reveal B3` \u00b7 `/flag H7` \u00b7 "
-    "`/unflag H7` \u00b7 `/chord C4` \u00b7 `/giveup`"
+    "**Commands:** `A1 B2` \u00b7 `flag H7 H8` \u00b7 "
+    "`unflag H7` \u00b7 `giveup`"
 )
 
 
@@ -146,11 +146,14 @@ def render_malformed_command(text: str) -> str:
     """Render help text for an unrecognized command."""
     return (
         "I didn't recognize a valid command. Available commands:\n\n"
-        "- `/reveal B3` \u2014 reveal a cell\n"
-        "- `/flag H7` \u2014 flag a suspected mine\n"
-        "- `/unflag H7` \u2014 remove a flag\n"
-        "- `/chord C4` \u2014 chord-reveal around a numbered cell\n"
-        "- `/giveup` \u2014 end the game"
+        "- `A1 B2` or `guess A1 A2` \u2014 reveal cell(s)\n"
+        "- `flag H7 H8` \u2014 flag suspected mine(s)\n"
+        "- `unflag H7` \u2014 remove flag(s)\n"
+        "- `giveup` \u2014 end the game\n\n"
+        "Use one action per line (e.g. `flag A1 A4` on one line, "
+        "`reveal B3` on the next).\n"
+        "Any unrecognized token invalidates the whole turn.\n"
+        "Slash prefixes are optional (for example, `/flag A1`)."
     )
 
 

@@ -11,7 +11,7 @@ import time
 from typing import Any, Callable
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
-from minesweeper.commands import ParsedCommand
+from minesweeper.commands import ParsedCommand, ParsedTurn
 from minesweeper.config import DEFAULT_COLS, DEFAULT_MINES, DEFAULT_ROWS
 from minesweeper.coords import coord_to_label, parse_coord
 from minesweeper.engine import Board, MoveResult, Phase
@@ -173,7 +173,7 @@ def validate_owner(payload: dict[str, Any], expected_owner: str) -> bool:
 
 def apply_move(
     prior_state: dict[str, Any],
-    command: ParsedCommand,
+    command: ParsedCommand | ParsedTurn,
     comment_id: int,
     *,
     secret: str | None = None,
@@ -214,8 +214,11 @@ def apply_move(
     if board.phase != Phase.PLAYING:
         return _game_over_response(board, prior_state, secret)
 
-    # Apply the command
-    move_result, message = _execute_command(board, command)
+    # Apply the command(s)
+    turn_commands = (
+        command.commands if isinstance(command, ParsedTurn) else [command]
+    )
+    move_result, message = _execute_turn(board, turn_commands)
 
     # Build updated state
     new_state = dict(prior_state)
@@ -288,8 +291,8 @@ def _execute_command(
     # Actions that require a coordinate
     if command.coordinate is None:
         return MoveResult.INVALID, (
-            f"The `/{action}` command requires a coordinate "
-            f"(e.g. `/{action} B3`)."
+            f"The `{action}` command requires a coordinate "
+            f"(e.g. `{action} B3`)."
         )
 
     parsed = parse_coord(command.coordinate, board.rows, board.cols)
@@ -309,13 +312,53 @@ def _execute_command(
         result = board.flag(row, col)
     elif action == "unflag":
         result = board.unflag(row, col)
-    elif action == "chord":
-        result = board.chord(row, col)
     else:
-        return MoveResult.INVALID, f"Unknown action `/{action}`."
+        return MoveResult.INVALID, f"Unknown action `{action}`."
 
     message = _result_message(action, label, result)
     return result, message
+
+
+def _execute_turn(
+    board: Board,
+    commands: list[ParsedCommand],
+) -> tuple[MoveResult, str]:
+    """Execute multiple commands in order for one player comment."""
+    if not commands:
+        return MoveResult.INVALID, "No command found in this move."
+
+    results: list[MoveResult] = []
+    messages: list[str] = []
+    for command in commands:
+        result, message = _execute_command(board, command)
+        results.append(result)
+        messages.append(message)
+        if result in {MoveResult.INVALID, MoveResult.LOSS, MoveResult.WIN}:
+            break
+        if board.phase != Phase.PLAYING:
+            break
+
+    final_result = _finalize_turn_result(results)
+    if len(messages) == 1:
+        return final_result, messages[0]
+    return final_result, "Processed move steps:\n" + "\n".join(
+        f"- {entry}" for entry in messages
+    )
+
+
+def _finalize_turn_result(results: list[MoveResult]) -> MoveResult:
+    """Collapse per-command results into one turn-level result."""
+    if not results:
+        return MoveResult.INVALID
+    if MoveResult.WIN in results:
+        return MoveResult.WIN
+    if MoveResult.LOSS in results:
+        return MoveResult.LOSS
+    if MoveResult.INVALID in results:
+        return MoveResult.INVALID
+    if MoveResult.OK in results:
+        return MoveResult.OK
+    return MoveResult.NO_OP
 
 
 def _result_message(action: str, label: str, result: MoveResult) -> str:
@@ -330,17 +373,16 @@ def _result_message(action: str, label: str, result: MoveResult) -> str:
             f"\U0001f4a5 **BOOM!** You hit a mine at **{label}**. Game over."
         )
     if result == MoveResult.NO_OP:
-        return f"No effect \u2014 `/{action} {label}` had nothing to do."
+        return f"No effect \u2014 `{action} {label}` had nothing to do."
     if result == MoveResult.INVALID:
-        return f"Invalid move: `/{action} {label}`."
+        return f"Invalid move: `{action} {label}`."
     # OK
     messages = {
         "reveal": f"Revealed **{label}**.",
         "flag": f"\U0001f6a9 Flagged **{label}**.",
         "unflag": f"Unflagged **{label}**.",
-        "chord": f"Chorded around **{label}**.",
     }
-    return messages.get(action, f"Applied `/{action} {label}`.")
+    return messages.get(action, f"Applied `{action} {label}`.")
 
 
 def _game_over_response(

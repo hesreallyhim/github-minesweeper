@@ -12,7 +12,7 @@ import os
 import time
 from typing import Any
 
-from minesweeper.commands import ParsedCommand, parse_command
+from minesweeper.commands import ParsedCommand, parse_turn
 from minesweeper.render import render_malformed_command, render_non_owner_response
 from minesweeper.room_service import (
     apply_move,
@@ -136,9 +136,9 @@ def handle_issue_comment(
             "labels_remove": [],
         }
 
-    # Parse command
-    cmd = parse_command(comment_body)
-    if cmd is None:
+    # Parse turn
+    turn = parse_turn(comment_body)
+    if turn is None:
         return {
             **base,
             "action": "no_command",
@@ -176,7 +176,7 @@ def handle_issue_comment(
         }
 
     # Apply the move
-    move = apply_move(prior_state, cmd, comment_id, secret=secret)
+    move = apply_move(prior_state, turn, comment_id, secret=secret)
 
     # Map internal result to action label
     result_str = move.get("result", "")

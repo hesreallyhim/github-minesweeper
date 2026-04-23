@@ -105,9 +105,11 @@ class TestRenderMessages:
 
     def test_malformed_command(self):
         msg = render_malformed_command("gibberish")
-        assert "/reveal" in msg
-        assert "/flag" in msg
-        assert "/giveup" in msg
+        assert "guess A1 A2" in msg
+        assert "flag H7 H8" in msg
+        assert "giveup" in msg
+        assert "one action per line" in msg
+        assert "invalidates the whole turn" in msg
 
 
 class TestRenderStats:
