@@ -1,0 +1,56 @@
+name: Minesweeper Room Cleanup
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+concurrency:
+  group: minesweeper-room-cleanup
+  cancel-in-progress: false
+
+jobs:
+  close-stale-rooms:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close stale Minesweeper rooms
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          cutoff="$(date -u -d '45 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')"
+          echo "Closing and locking open Minesweeper rooms created before ${cutoff}."
+
+          mapfile -t issues < <(
+            gh issue list \
+              --repo "$REPOSITORY" \
+              --state open \
+              --label "game:minesweeper" \
+              --search "created:<${cutoff}" \
+              --limit 1000 \
+              --json number \
+              --jq '.[].number'
+          )
+
+          if [ "${#issues[@]}" -eq 0 ]; then
+            echo "No stale Minesweeper rooms to close."
+            exit 0
+          fi
+
+          for issue in "${issues[@]}"; do
+            echo "Closing issue #${issue}."
+            gh issue close \
+              --repo "$REPOSITORY" \
+              "$issue" \
+              --comment "Closing this Minesweeper room because it has been open for more than 45 minutes."
+
+            echo "Locking issue #${issue}."
+            gh issue lock \
+              --repo "$REPOSITORY" \
+              "$issue" \
+              --reason resolved || echo "Issue #${issue} may already be locked."
+          done
