@@ -43,13 +43,19 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Optional directory to write README leaderboard cards.",
     )
+    parser.add_argument(
+        "--checked-at",
+        required=False,
+        default=None,
+        help="UTC timestamp for when leaderboard sources were checked.",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     records = load_game_records(args.games_root)
-    summary = build_leaderboard_summary(records)
+    summary = build_leaderboard_summary(records, checked_at=args.checked_at)
     markdown = render_leaderboard_markdown(summary)
     changed = update_readme_block(args.readme, markdown)
 

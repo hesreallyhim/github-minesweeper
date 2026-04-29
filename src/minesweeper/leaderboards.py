@@ -25,6 +25,10 @@ CARD_TOP_N = 5
 MIN_GAMES_FOR_RATE = 3
 
 
+def _utc_now_iso() -> str:
+    return dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat()
+
+
 def _safe_int(value: Any, default: int = 0) -> int:
     try:
         return int(value)
@@ -102,7 +106,11 @@ def _sort_counts(counter: Counter[str]) -> list[tuple[str, int]]:
     return sorted(counter.items(), key=lambda item: (-item[1], item[0]))
 
 
-def build_leaderboard_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
+def build_leaderboard_summary(
+    records: list[dict[str, Any]],
+    *,
+    checked_at: str | None = None,
+) -> dict[str, Any]:
     """Build the canonical leaderboard summary payload."""
     games_completed = Counter[str]()
     wins = Counter[str]()
@@ -166,6 +174,7 @@ def build_leaderboard_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
 
     return {
         "generated_at": generated_at,
+        "checked_at": checked_at or _utc_now_iso(),
         "source_games": len(records),
         "min_games_for_rate": MIN_GAMES_FOR_RATE,
         "most_games_completed": [
@@ -303,11 +312,13 @@ def write_leaderboard_cards(summary: dict[str, Any], cards_dir: Path) -> list[st
 def render_leaderboard_markdown(summary: dict[str, Any]) -> str:
     """Render README leaderboard block between marker comments."""
     generated_at = str(summary["generated_at"])
+    checked_at = str(summary.get("checked_at") or generated_at)
     source_games = _safe_int(summary["source_games"], 0)
     has_data = source_games > 0
 
     lines = [
         "### Leaderboards",
+        f"_Last checked (UTC): {checked_at or 'n/a'}_",
         f"_As of (UTC): {generated_at or 'n/a'} from {source_games} completed games_",
         "(Leaderboards update every 15 minutes)",
         "",

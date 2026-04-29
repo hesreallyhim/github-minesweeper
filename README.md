@@ -52,24 +52,40 @@ In order to keep track of things, once you figure out that a certain cell must c
 
 ## Command Format
 
-Use plain commands (slash prefix is also accepted):
+ Play by commenting commands:
 
-- `A1 B2` or `guess A1 A2` - reveal cell(s)
-- `flag H7 H8` - flag suspected mine(s)
-- `unflag H7` - remove flag(s)
-- `giveup` - end the game
+  - `A1` - or: `guess A1`, `reveal A1`, `/guess A1`, `/reveal A1` - reveal cell(s)
+  - `flag H7` - flag suspected mine(s)
+  - `unflag H7` - remove flag(s)
+  - `giveup` - end the game
 
-Rules:
-
-- Commands are case-insensitive.
-- Use one action per line.
-- Any unrecognized token invalidates the whole turn.
+  Notes:
+  - Commands are case-insensitive.
+  - Bare coordinates with no preceding command will be interpreted as `guess` commands, e.g.:
+    `A1` <=> `guess A1`, `A1 A2` <=> `guess A1 A2`,
+    however `flag A1 A2` indicates `flag` for A1 and A2.
+  - Each line may contain one command but multiple cells, e.g.:
+    `guess A1 A2 B1 C1`
+  - Each comment may contain multiple commands on different lines, e.g.:
+    ```
+    A1 A2 B1
+    flag B2 C5
+    A8
+    guess D10
+    ```
+  - Use one action per line.
+  - Any unrecognized token invalidates the whole turn.
+  - Contradictory commands (e.g. `guess A1` and `flag A1` on two lines) will
+    invalidate the whole turn.
+  - Slash prefixes are optional but unnecessary (for example, `/flag A1`).
+  - You do not have to flag all mines in order to solve the game.
 
 ## Hall Of Fame
 
 <!-- MS_LEADERBOARD_START -->
 ### Leaderboards
-_As of (UTC): 2026-04-21T05:07:54+00:00 from 2 completed games_
+_Last checked (UTC): 2026-04-29T05:30:52+00:00_
+_As of (UTC): n/a from 0 completed games_
 (Leaderboards update every 15 minutes)
 
 <table align="center">
@@ -82,14 +98,10 @@ _As of (UTC): 2026-04-21T05:07:54+00:00 from 2 completed games_
     <td><picture><img src="assets/readme-leaderboard-card-consistency.svg" alt="Consistency Card" width="460" /></picture></td>
   </tr>
 </table>
+
+<em>No completed games yet.</em>
 <!-- MS_LEADERBOARD_END -->
 
-## Repository Surface
+## Repository Structure
 
-- `.github/ISSUE_TEMPLATE/` - room creation UX
-- `.github/workflows/minesweeper-leaderboards.yml` - scheduled leaderboard publishing
-- `scripts/build_leaderboards.py` - leaderboard build entrypoint
-- `src/minesweeper/leaderboards.py` - leaderboard logic and README block rendering
-- `data/games/` - terminal game records
-- `data/leaderboards.json` - machine-readable leaderboard summary
-- `assets/readme-leaderboard-card-*.svg` - generated leaderboard cards
+The default branch `main` is treated as a pulic game "UI" surface, and contains only the minimal set of files necessary. To view the full source code, visit `develop`.
