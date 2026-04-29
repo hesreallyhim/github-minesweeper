@@ -1,11 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a Bug or Issue
-    url: https://github.com/hesreallyhim/github-minesweeper/discussions
+    url: https://github.com/hesreallyhim/github-minesweeper/discussions/30
     about: Please open a discussion topic to report any issues, since this repository uses issues for gameplay.
   - name: Request a Feature
     url: https://github.com/hesreallyhim/github-minesweeper/discussions/28
     about: Want to request a feature? Have an idea on how to improve the game or the repository? We've got a thread for that too!
-  - name: Security & Privacy Reporting
-    url: https://github.com/hesreallyhim/github-minesweeper/security/advisories/new
-    about: If you have discovered a vulnerability related to security or privacy, please submit a private report, rather than opening a discussion topic.
