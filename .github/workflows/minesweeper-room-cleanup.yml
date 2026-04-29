@@ -13,44 +13,81 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  close-stale-rooms:
+  cleanup-rooms:
     runs-on: ubuntu-latest
     steps:
-      - name: Close stale Minesweeper rooms
+      - name: Expire and close Minesweeper rooms
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
+          ACTIVE_LABEL: game:minesweeper
+          EXPIRED_LABEL: game:minesweeper:expired
+          TERMINAL_LABELS: game:minesweeper:won game:minesweeper:lost game:minesweeper:archived game:minesweeper:expired
         shell: bash
         run: |
-          cutoff="$(date -u -d '45 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')"
-          echo "Closing and locking open Minesweeper rooms created before ${cutoff}."
+          expire_cutoff="$(date -u -d '30 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')"
+          close_cutoff="$(date -u -d '15 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')"
 
-          mapfile -t issues < <(
+          echo "Expiring open active rooms created before ${expire_cutoff}."
+          echo "Closing open terminal rooms last updated before ${close_cutoff}."
+
+          gh label create "$EXPIRED_LABEL" \
+            --repo "$REPOSITORY" \
+            --color "6f42c1" \
+            --description "Minesweeper room expired by time limit" || true
+
+          mapfile -t active_issues < <(
             gh issue list \
               --repo "$REPOSITORY" \
               --state open \
-              --label "game:minesweeper" \
-              --search "created:<${cutoff}" \
+              --label "$ACTIVE_LABEL" \
+              --search "created:<${expire_cutoff}" \
               --limit 1000 \
               --json number \
               --jq '.[].number'
           )
 
-          if [ "${#issues[@]}" -eq 0 ]; then
-            echo "No stale Minesweeper rooms to close."
-            exit 0
-          fi
-
-          for issue in "${issues[@]}"; do
-            echo "Closing issue #${issue}."
-            gh issue close \
+          for issue in "${active_issues[@]}"; do
+            echo "Expiring and locking active room #${issue}."
+            gh issue comment \
               --repo "$REPOSITORY" \
               "$issue" \
-              --comment "Closing this Minesweeper room because it has been open for more than 45 minutes."
+              --body "This Minesweeper room has expired because it has been open for more than 30 minutes. It will remain visible briefly, then be closed automatically."
 
-            echo "Locking issue #${issue}."
+            gh issue edit \
+              --repo "$REPOSITORY" \
+              "$issue" \
+              --add-label "$EXPIRED_LABEL" \
+              --remove-label "$ACTIVE_LABEL"
+
             gh issue lock \
               --repo "$REPOSITORY" \
               "$issue" \
               --reason resolved || echo "Issue #${issue} may already be locked."
+          done
+
+          declare -A close_issues=()
+          for label in $TERMINAL_LABELS; do
+            while IFS= read -r issue; do
+              close_issues["$issue"]=1
+            done < <(
+              gh issue list \
+                --repo "$REPOSITORY" \
+                --state open \
+                --label "$label" \
+                --search "updated:<${close_cutoff}" \
+                --limit 1000 \
+                --json number \
+                --jq '.[].number'
+            )
+          done
+
+          if [ "${#close_issues[@]}" -eq 0 ]; then
+            echo "No terminal Minesweeper rooms are old enough to close."
+            exit 0
+          fi
+
+          for issue in "${!close_issues[@]}"; do
+            echo "Closing terminal room #${issue}."
+            gh issue close --repo "$REPOSITORY" "$issue"
           done
