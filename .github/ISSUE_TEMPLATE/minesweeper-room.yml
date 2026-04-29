@@ -11,24 +11,41 @@ body:
 
         Play by commenting commands:
 
-        - `A1 B2` or `guess A1 A2` - reveal cell(s)
-        - `flag H7 H8` - flag suspected mine(s)
+        - `A1` - or: `guess A1`, `reveal A1`, `/guess A1`, `/reveal A1` - reveal cell(s)
+        - `flag H7` - flag suspected mine(s)
         - `unflag H7` - remove flag(s)
         - `giveup` - end the game
 
         Notes:
         - Commands are case-insensitive.
+        - Bare coordinates with no preceding command will be interpreted as `guess` commands, e.g.:
+          `A1` <=> `guess A1`, `A1 A2` <=> `guess A1 A2`,
+          however `flag A1 A2` indicates `flag` for A1 and A2.
+        - Each line may contain one command but multiple cells, e.g.:
+          `guess A1 A2 B1 C1`
+        - Each comment may contain multiple commands on different lines, e.g.:
+          ```
+          A1 A2 B1
+          flag B2 C5
+          A8
+          guess D10
+          ```
         - Use one action per line.
         - Any unrecognized token invalidates the whole turn.
-        - Slash prefixes are optional (for example, `/flag A1`).
+        - Contradictory commands (e.g. `guess A1` and `flag A1` on two lines) will
+          invalidate the whole turn.
+        - Slash prefixes are optional but unnecessary (for example, `/flag A1`).
+        - You do not have to flag all mines in order to solve the game.
 
-        Only you (the issue opener) can play in this room.
+        Only you (the issue opener) can play in this room. Other users' comments will not
+        affect the game - however, excessive comments, even by the issue owner, will be
+        considered potential spam.
 
   - type: checkboxes
     id: conduct
     attributes:
       label: Code of Conduct
-      description: By participating, you agree to follow our [Code of Conduct](https://github.com/hesreallyhim/).
+      description: By participating, you agree to follow our [Code of Conduct](https://github.com/hesreallyhim/github-minesweeper/.github/CODE_OF_CONDUCT.md).
       options:
         - label: I have read the Code of Conduct and agree to respect the rules and standards of this repository.
           required: true

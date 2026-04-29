@@ -11,3 +11,5 @@ build/
 .factory-runs/
 factory/logs/
 factory/state/
+node_modules/
+assets/drafts/
