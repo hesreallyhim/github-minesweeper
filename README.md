@@ -1,7 +1,7 @@
 <picture>
-  <source prefers-color-scheme="dark" srcset="assets/minesweeper-banner-dark.svg" />
-  <source prefers-color-scheme="light" srcset="assets/minesweeper-banner-light.svg" />
-  <img src="assets/minesweeper-banner.svg" alt="Minesweeper banner" />
+  <source prefers-color-scheme="dark" srcset="media/minesweeper-banner-dark.svg" />
+  <source prefers-color-scheme="light" srcset="media/minesweeper-banner-light.svg" />
+  <img src="media/minesweeper-banner-dark.svg" alt="Minesweeper banner" />
 </picture>
 
 # Welcome to **GitHub Minesweeper!**<sup>*</sup><br>
@@ -30,7 +30,7 @@
 
 It's this thing:
 
-<picture><img src="assets/minesweeper-board-classic.jpg" alt="Minesweeper screenshot" width="200" /></picture>
+<picture><img src="media/minesweeper-board-classic.jpg" alt="Minesweeper screenshot" width="200" /></picture>
 
 Minesweeper is a classic computer game. Like all great games, it's about a situation that we can all relate to: going through a grid of tiles and trying to identify the location of hidden explosive devices on the basis of numerical hints, while trying to avoid getting blown up. You could call it a "slice of life" game I suppose.
 
@@ -93,12 +93,12 @@ _Last checked (UTC): 2026-04-29T17:48:38+00:00 from 0 completed games_
 
 <table align="center">
   <tr>
-    <td><picture><img src="assets/readme-leaderboard-card-champions.svg" alt="Champions Card" width="460" /></picture></td>
-    <td><picture><img src="assets/readme-leaderboard-card-commitment.svg" alt="Commitment Card" width="460" /></picture></td>
+    <td><picture><img src=".github/leaderboards/cards/readme-leaderboard-card-champions.svg" alt="Champions Card" width="460" /></picture></td>
+    <td><picture><img src=".github/leaderboards/cards/readme-leaderboard-card-commitment.svg" alt="Commitment Card" width="460" /></picture></td>
   </tr>
   <tr>
-    <td><picture><img src="assets/readme-leaderboard-card-quick-clear.svg" alt="Quick Clear Card" width="460" /></picture></td>
-    <td><picture><img src="assets/readme-leaderboard-card-consistency.svg" alt="Consistency Card" width="460" /></picture></td>
+    <td><picture><img src=".github/leaderboards/cards/readme-leaderboard-card-quick-clear.svg" alt="Quick Clear Card" width="460" /></picture></td>
+    <td><picture><img src=".github/leaderboards/cards/readme-leaderboard-card-consistency.svg" alt="Consistency Card" width="460" /></picture></td>
   </tr>
 </table>
 

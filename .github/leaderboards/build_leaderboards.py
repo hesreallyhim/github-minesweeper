@@ -7,7 +7,7 @@ import argparse
 import json
 from pathlib import Path
 
-from minesweeper.leaderboards import (
+from leaderboards import (
     build_leaderboard_summary,
     load_game_records,
     render_leaderboard_markdown,
@@ -22,7 +22,7 @@ def parse_args() -> argparse.Namespace:
         "--games-root",
         type=Path,
         required=True,
-        help="Directory containing terminal game records (data/games).",
+        help="Directory containing terminal game records.",
     )
     parser.add_argument(
         "--readme",

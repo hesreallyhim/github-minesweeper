@@ -76,7 +76,7 @@ def normalize_record(path: Path, data: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def load_game_records(games_root: Path) -> list[dict[str, Any]]:
-    """Load normalized terminal-game records from data/games."""
+    """Load normalized terminal-game records."""
     if not games_root.exists():
         return []
 
@@ -324,12 +324,12 @@ def render_leaderboard_markdown(summary: dict[str, Any]) -> str:
         "",
         '<table align="center">',
         "  <tr>",
-        '    <td><picture><img src="assets/readme-leaderboard-card-champions.svg" alt="Champions Card" width="460" /></picture></td>',
-        '    <td><picture><img src="assets/readme-leaderboard-card-commitment.svg" alt="Commitment Card" width="460" /></picture></td>',
+        '    <td><picture><img src=".github/leaderboards/cards/readme-leaderboard-card-champions.svg" alt="Champions Card" width="460" /></picture></td>',
+        '    <td><picture><img src=".github/leaderboards/cards/readme-leaderboard-card-commitment.svg" alt="Commitment Card" width="460" /></picture></td>',
         "  </tr>",
         "  <tr>",
-        '    <td><picture><img src="assets/readme-leaderboard-card-quick-clear.svg" alt="Quick Clear Card" width="460" /></picture></td>',
-        '    <td><picture><img src="assets/readme-leaderboard-card-consistency.svg" alt="Consistency Card" width="460" /></picture></td>',
+        '    <td><picture><img src=".github/leaderboards/cards/readme-leaderboard-card-quick-clear.svg" alt="Quick Clear Card" width="460" /></picture></td>',
+        '    <td><picture><img src=".github/leaderboards/cards/readme-leaderboard-card-consistency.svg" alt="Consistency Card" width="460" /></picture></td>',
         "  </tr>",
         "</table>",
     ]
