@@ -52,6 +52,8 @@ In order to keep track of things, once you figure out that a certain cell must c
 
 ## Command Format
 
+<details>
+<summary>Commands</summary>
  Play by commenting commands:
 
   - `A1` - or: `guess A1`, `reveal A1`, `/guess A1`, `/reveal A1` - reveal cell(s)
@@ -79,13 +81,14 @@ In order to keep track of things, once you figure out that a certain cell must c
     invalidate the whole turn.
   - Slash prefixes are optional but unnecessary (for example, `/flag A1`).
   - You do not have to flag all mines in order to solve the game.
+</details>
 
 ## Hall Of Fame
 
 <!-- MS_LEADERBOARD_START -->
 ### Leaderboards
-_Last checked (UTC): 2026-04-29T05:30:52+00:00_
-_As of (UTC): n/a from 0 completed games_
+_Last checked (UTC): 2026-04-29T05:36:12+00:00 from 0 completed games_
+
 (Leaderboards update every 15 minutes)
 
 <table align="center">

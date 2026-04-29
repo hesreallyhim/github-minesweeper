@@ -318,8 +318,8 @@ def render_leaderboard_markdown(summary: dict[str, Any]) -> str:
 
     lines = [
         "### Leaderboards",
-        f"_Last checked (UTC): {checked_at or 'n/a'}_",
-        f"_As of (UTC): {generated_at or 'n/a'} from {source_games} completed games_",
+        f"_Last checked (UTC): {checked_at or 'n/a'} from {source_games} completed games_",
+        "",
         "(Leaderboards update every 15 minutes)",
         "",
         '<table align="center">',
