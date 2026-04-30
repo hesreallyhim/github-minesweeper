@@ -1,0 +1,16 @@
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+dist/
+build/
+.DS_Store
+.factory-runs/
+assets/drafts/
+factory/logs/
+factory/state/
+node_modules/
+.wrangler/

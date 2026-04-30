@@ -1,0 +1,221 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+
+<defs>
+  <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#0d1117"/>
+    <stop offset="1" stop-color="#010409"/>
+  </linearGradient>
+
+  <radialGradient id="glow" cx="0.3" cy="0.3" r="0.9">
+    <stop offset="0" stop-color="#39d353" stop-opacity="0.08"/>
+    <stop offset="1" stop-color="#39d353" stop-opacity="0"/>
+  </radialGradient>
+
+  <pattern id="dots" x="0" y="0" width="36" height="36" patternUnits="userSpaceOnUse">
+    <circle cx="1" cy="1" r="1" fill="#30363d" opacity="0.35"/>
+  </pattern>
+
+  <filter id="cellShadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="1.5" stdDeviation="1" flood-color="#000" flood-opacity="0.35"/>
+  </filter>
+
+  <!-- Classic spiked bomb, 40x40 viewbox centered -->
+  <symbol id="bomb" viewBox="-20 -20 40 40" overflow="visible">
+    <g fill="#0d1117">
+      <rect x="-1.8" y="-15" width="3.6" height="5" rx="0.5"/>
+      <rect x="-1.8" y="10" width="3.6" height="5" rx="0.5"/>
+      <rect x="-15" y="-1.8" width="5" height="3.6" rx="0.5"/>
+      <rect x="10" y="-1.8" width="5" height="3.6" rx="0.5"/>
+      <g transform="rotate(45)">
+        <rect x="-1.8" y="-14" width="3.6" height="4.5" rx="0.5"/>
+        <rect x="-1.8" y="9.5" width="3.6" height="4.5" rx="0.5"/>
+        <rect x="-14" y="-1.8" width="4.5" height="3.6" rx="0.5"/>
+        <rect x="9.5" y="-1.8" width="4.5" height="3.6" rx="0.5"/>
+      </g>
+    </g>
+    <circle cx="0" cy="0" r="9.5" fill="#0d1117" stroke="#484f58" stroke-width="0.6"/>
+    <circle cx="-3" cy="-3" r="2.3" fill="#484f58"/>
+    <circle cx="-3.5" cy="-3.5" r="1" fill="#8b949e"/>
+    <path d="M 6.5,-6.5 Q 10,-10 12,-13" stroke="#8b949e" stroke-width="1.6"
+          fill="none" stroke-linecap="round"/>
+    <circle cx="13" cy="-14" r="3" fill="#f85149"/>
+    <circle cx="13" cy="-14" r="1.5" fill="#ffa657"/>
+    <circle cx="13" cy="-14" r="0.6" fill="#f0f6fc"/>
+  </symbol>
+
+  <!-- Flag icon, 30x36 viewbox centered -->
+  <symbol id="flag" viewBox="-15 -18 30 36" overflow="visible">
+    <rect x="-0.9" y="-14" width="1.8" height="28" fill="#c9d1d9"/>
+    <rect x="-6" y="11" width="13" height="2" rx="0.5" fill="#8b949e"/>
+    <rect x="-7" y="13" width="15" height="2.5" rx="0.5" fill="#8b949e"/>
+    <path d="M 1,-14 L 12,-7 L 1,0 Z" fill="#f85149"/>
+    <path d="M 1,-14 L 12,-7 L 1,-12 Z" fill="#ff7b72" opacity="0.6"/>
+  </symbol>
+</defs>
+
+  <!-- background -->
+  <rect width="1280" height="640" fill="url(#bgGrad)"/>
+  <rect width="1280" height="640" fill="url(#dots)"/>
+  <rect width="1280" height="640" fill="url(#glow)"/>
+
+  <!-- subtle corner accents -->
+  <g stroke="#30363d" stroke-width="1" fill="none" opacity="0.55">
+    <path d="M 24,24 L 24,64 M 24,24 L 64,24"/>
+    <path d="M 1256,24 L 1256,64 M 1256,24 L 1216,24"/>
+    <path d="M 24,616 L 24,576 M 24,616 L 64,616"/>
+    <path d="M 1256,616 L 1256,576 M 1256,616 L 1216,616"/>
+  </g>
+
+  <!-- LEFT: title block -->
+  <g transform="translate(80, 180)">
+    <!-- terminal command hint -->
+    <text font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">
+      <tspan fill="#8b949e">~/projects</tspan><tspan dx="10" fill="#7ee787">❯</tspan><tspan dx="8" fill="#c9d1d9">gh repo clone</tspan><tspan dx="8" fill="#58a6ff" font-weight="600">github-minesweeper</tspan>
+    </text>
+
+    <!-- stacked title -->
+    <text y="86" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          font-weight="900" font-size="88" fill="#f0f6fc" letter-spacing="-4">Mine</text>
+    <text y="172" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+          font-weight="900" font-size="88" fill="#f0f6fc" letter-spacing="-4">sweeper</text>
+
+    <!-- tagline -->
+    <text y="216" font-family="ui-sans-serif, -apple-system, system-ui, sans-serif"
+          font-size="20" fill="#8b949e">
+      The classic game, now a GitHub repo.
+    </text>
+
+    <!-- feature pills -->
+    <g transform="translate(0, 260)" font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+       font-size="13">
+      <g>
+        <rect width="146" height="32" rx="16" fill="#161b22" stroke="#30363d"/>
+        <circle cx="18" cy="16" r="4" fill="#58a6ff"/>
+        <text x="32" y="20.5" fill="#c9d1d9">issue → click</text>
+      </g>
+      <g transform="translate(158, 0)">
+        <rect width="146" height="32" rx="16" fill="#161b22" stroke="#30363d"/>
+        <circle cx="18" cy="16" r="4" fill="#f85149"/>
+        <text x="32" y="20.5" fill="#c9d1d9">label → flag</text>
+      </g>
+      <g transform="translate(316, 0)">
+        <rect width="156" height="32" rx="16" fill="#161b22" stroke="#30363d"/>
+        <circle cx="18" cy="16" r="4" fill="#7ee787"/>
+        <text x="32" y="20.5" fill="#c9d1d9">action → sweep</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- tiny contribution legend, bottom-left Easter egg -->
+  <g transform="translate(80, 590)" font-family="ui-monospace, monospace" font-size="11"
+     fill="#8b949e">
+    <text y="10">Less</text>
+    <g transform="translate(34, 0)">
+      <rect width="10" height="10" rx="2" fill="#0e4429"/>
+      <rect x="14" width="10" height="10" rx="2" fill="#006d32"/>
+      <rect x="28" width="10" height="10" rx="2" fill="#26a641"/>
+      <rect x="42" width="10" height="10" rx="2" fill="#39d353"/>
+    </g>
+    <text x="92" y="10">More</text>
+  </g>
+
+  <!-- bottom-right commit hash flourish -->
+  <g transform="translate(1040, 600)" font-family="ui-monospace, monospace" font-size="12"
+     fill="#8b949e">
+    <circle cx="4" cy="-3" r="4" fill="none" stroke="#7ee787" stroke-width="1.5"/>
+    <text x="16" y="1" fill="#c9d1d9">main</text>
+    <text x="58" y="1" fill="#8b949e">·</text>
+    <text x="70" y="1" fill="#d2a8ff">a1b7c3f</text>
+    <text x="132" y="1" fill="#8b949e">swept 42 cells</text>
+  </g>
+
+  <!-- RIGHT: minesweeper board -->
+  <g filter="url(#cellShadow)">
+    <rect x="637" y="102" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="692" y="102" width="50" height="50" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="747" y="102" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="802" y="102" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="857" y="102" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="912" y="102" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/><use href="#flag" x="921.5" y="111.5" width="31" height="31"/>
+<rect x="967" y="102" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1022" y="102" width="50" height="50" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1077" y="102" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1132" y="102" width="50" height="50" rx="5" fill="#39d353" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="637" y="157" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="692" y="157" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="747" y="157" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="802" y="157" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="827.0" y="191.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="857" y="157" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="882.0" y="191.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#7ee787">2</text>
+<rect x="912" y="157" width="50" height="50" rx="5" fill="#39d353" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="967" y="157" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1022" y="157" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1077" y="157" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/><use href="#flag" x="1086.5" y="166.5" width="31" height="31"/>
+<rect x="1132" y="157" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="637" y="212" width="50" height="50" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="692" y="212" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="747" y="212" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="772.0" y="246.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="802" y="212" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="857" y="212" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="882.0" y="246.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="912" y="212" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="967" y="212" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1022" y="212" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="1047.0" y="246.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="1077" y="212" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="1102.0" y="246.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#7ee787">2</text>
+<rect x="1132" y="212" width="50" height="50" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="637" y="267" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="692" y="267" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="747" y="267" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="772.0" y="301.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#7ee787">2</text>
+<rect x="802" y="267" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="857" y="267" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="882.0" y="301.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#7ee787">2</text>
+<rect x="912" y="267" width="50" height="50" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="967" y="267" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="992.0" y="301.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="1022" y="267" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="1077" y="267" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="1102.0" y="301.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#7ee787">2</text>
+<rect x="1132" y="267" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="637" y="322" width="50" height="50" rx="5" fill="#39d353" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="692" y="322" width="50" height="50" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/><use href="#flag" x="701.5" y="331.5" width="31" height="31"/>
+<rect x="747" y="322" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="772.0" y="356.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="802" y="322" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="827.0" y="356.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="857" y="322" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="882.0" y="356.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="912" y="322" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="937.0" y="356.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="967" y="322" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/><use href="#flag" x="976.5" y="331.5" width="31" height="31"/>
+<rect x="1022" y="322" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="1047.0" y="356.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="1077" y="322" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="1132" y="322" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="637" y="377" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="692" y="377" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="717.0" y="411.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#7ee787">2</text>
+<rect x="747" y="377" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="802" y="377" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="857" y="377" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="912" y="377" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="967" y="377" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="992.0" y="411.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="1022" y="377" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="1047.0" y="411.8" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="28" fill="#58a6ff">1</text>
+<rect x="1077" y="377" width="50" height="50" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="1132" y="377" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="637" y="432" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="692" y="432" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="747" y="432" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="802" y="432" width="50" height="50" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="857" y="432" width="50" height="50" rx="5" fill="#39d353" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="912" y="432" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="967" y="432" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1022" y="432" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1077" y="432" width="50" height="50" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1132" y="432" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="637" y="487" width="50" height="50" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="692" y="487" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="747" y="487" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="802" y="487" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="857" y="487" width="50" height="50" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="912" y="487" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="967" y="487" width="50" height="50" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1022" y="487" width="50" height="50" rx="5" fill="#3d1416" stroke="#f85149" stroke-width="1.5"/><use href="#bomb" x="1029.5" y="494.5" width="35" height="35"/>
+<rect x="1077" y="487" width="50" height="50" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1132" y="487" width="50" height="50" rx="5" fill="#39d353" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+  </g>
+
+  <!-- cursor indicator hovering at the edge of a hidden cell -->
+  <g transform="translate(1060, 130)">
+    <path d="M 0,0 L 0,18 L 5,13 L 8,20 L 11,19 L 8,12 L 14,12 Z"
+          fill="#f0f6fc" stroke="#0d1117" stroke-width="1.4" stroke-linejoin="round"/>
+  </g>
+</svg>

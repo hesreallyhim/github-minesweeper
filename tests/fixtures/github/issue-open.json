@@ -1,0 +1,18 @@
+{
+  "_comment": "Fixture: issue opened event — initializes a new minesweeper room",
+  "action": "opened",
+  "issue": {
+    "number": 1,
+    "title": "Minesweeper Room",
+    "user": {
+      "login": "testplayer"
+    },
+    "labels": []
+  },
+  "repository": {
+    "full_name": "testowner/github-issue-minesweeper"
+  },
+  "sender": {
+    "login": "testplayer"
+  }
+}

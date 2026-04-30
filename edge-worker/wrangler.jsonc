@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "github-minesweeper-webhook",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-16",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "ABUSE_GUARD",
+        "class_name": "AbuseGuard"
+      },
+      {
+        "name": "GITHUB_API_GUARD",
+        "class_name": "GitHubApiGuard"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["AbuseGuard"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["GitHubApiGuard"]
+    }
+  ],
+  "vars": {
+    "GAME_ROWS": "9",
+    "GAME_COLS": "9",
+    "GAME_MINES": "10"
+  }
+}
