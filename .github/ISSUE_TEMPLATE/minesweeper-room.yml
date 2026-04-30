@@ -15,7 +15,8 @@ body:
 
         Feel free to play again, but **don't open more than one issue at a time.**
 
-        > [!Alert] **WARNING:** The following behavior may trigger GitHub's rate-limit abuse detection, and can result in a ban, as it presents a risk to the maintainer:
+        > [!WARNING]
+        > **WARNING:** The following behavior may trigger GitHub's rate-limit abuse detection, and can result in a ban, as it presents a risk to the maintainer:
         > - Do **NOT** comment in anyone else's thread.
         > - Do **NOT** comment in your own thread at an aggressive pace - try to just take turns with the bot.
         >   If the bot is not responsive, it probably means the app is being rate-limited - please be patient,
