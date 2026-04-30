@@ -2,6 +2,7 @@ import { decideAbuseGuard } from "./abuse-guard";
 import type { AbuseGuard } from "./abuse-guard";
 import { guardedBlockGitHubUser, guardedGitHubRequest } from "./github-api-guard";
 import type { GitHubApiGuard } from "./github-api-guard";
+import { buildLeaderboardGameRecord } from "./leaderboard-record";
 
 export { AbuseGuard } from "./abuse-guard";
 export { GitHubApiGuard } from "./github-api-guard";
@@ -61,6 +62,8 @@ const STATE_MARKER = "MINESWEEPER_STATE_V1";
 const COMMAND_REMINDER =
   "**Commands:** `A1 B2` (reveal) · `guess A1 A2` · `flag H7 H8` · `unflag H7` · `giveup`";
 const ACTIVE_GAME_LABEL = "game:minesweeper";
+const LEADERBOARD_GAME_RECORD_ROOT = ".github/leaderboards/data/games";
+const LEADERBOARD_RECORD_BRANCH = "main";
 const GAMEPLAY_LIMIT_MS = 30 * 60 * 1000;
 const ACTION_ALIASES: Record<string, CommandAction> = {
   reveal: "reveal",
@@ -1159,6 +1162,83 @@ async function lockIssue(
   }
 }
 
+async function ensureLeaderboardGameRecord(
+  env: Env,
+  installationId: number,
+  repo: string,
+  state: GameStateV1,
+): Promise<void> {
+  try {
+    const record = buildLeaderboardGameRecord(state, new Date().toISOString());
+    if (!record) return;
+
+    const recordPath = `${LEADERBOARD_GAME_RECORD_ROOT}/${state.issue_number}.json`;
+    const encodedPath = recordPath.split("/").map(encodeURIComponent).join("/");
+    const exists = await ghFetch(
+      env,
+      installationId,
+      repo,
+      `/contents/${encodedPath}?ref=${encodeURIComponent(LEADERBOARD_RECORD_BRANCH)}`,
+    );
+    if (exists.status === 200) {
+      console.log("leaderboard_game_record_exists", {
+        repo,
+        issueNumber: state.issue_number,
+        path: recordPath,
+      });
+      return;
+    }
+    if (exists.status !== 404) {
+      console.warn("leaderboard_game_record_check_failed", {
+        repo,
+        issueNumber: state.issue_number,
+        path: recordPath,
+        status: exists.status,
+      });
+      return;
+    }
+
+    const content = btoa(`${stableJsonStringify(record)}\n`);
+    const created = await ghFetch(
+      env,
+      installationId,
+      repo,
+      `/contents/${encodedPath}`,
+      {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          message: `leaderboard: record game #${state.issue_number}`,
+          content,
+          branch: LEADERBOARD_RECORD_BRANCH,
+        }),
+      },
+      { contentGenerating: true },
+    );
+    if (!created.ok) {
+      console.warn("leaderboard_game_record_write_failed", {
+        repo,
+        issueNumber: state.issue_number,
+        path: recordPath,
+        status: created.status,
+      });
+      return;
+    }
+    console.log("leaderboard_game_record_written", {
+      repo,
+      issueNumber: state.issue_number,
+      path: recordPath,
+    });
+  } catch (err) {
+    console.warn("leaderboard_game_record_error", {
+      repo,
+      issueNumber: state.issue_number,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return;
+  }
+}
+
 async function createRoomBody(
   env: Env,
   repo: string,
@@ -1480,6 +1560,7 @@ async function handleIssueCommentCreated(
   const move = await applyMove(env, requestOrigin, reconciled, turn, commentId);
   if (move.body) {
     await postIssueComment(env, installationId, repo, issueNumber, move.body);
+    if (move.lockIssue) await ensureLeaderboardGameRecord(env, installationId, repo, move.state);
     if (move.lockIssue) await lockIssue(env, installationId, repo, issueNumber);
   }
   return { action: "move", result: move.result };
