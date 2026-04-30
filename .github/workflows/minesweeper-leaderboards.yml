@@ -1,0 +1,52 @@
+name: Minesweeper Leaderboards
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      LEADERBOARD_ROOT: .github/leaderboards
+      LEADERBOARD_DATA: .github/leaderboards/data
+      LEADERBOARD_CARDS: .github/leaderboards/cards
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build leaderboard summaries
+        run: |
+          CHECKED_AT="$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")"
+          PYTHONPATH="$LEADERBOARD_ROOT" python3 "$LEADERBOARD_ROOT/build_leaderboards.py" \
+            --games-root "$LEADERBOARD_DATA/games" \
+            --readme README.md \
+            --json-out "$LEADERBOARD_DATA/leaderboards.json" \
+            --cards-dir "$LEADERBOARD_CARDS" \
+            --checked-at "$CHECKED_AT"
+
+      - name: Commit and push leaderboard updates
+        run: |
+          if [ -z "$(git status --porcelain -- README.md "$LEADERBOARD_DATA/leaderboards.json" "$LEADERBOARD_CARDS"/readme-leaderboard-card-*.svg)" ]; then
+            echo "No leaderboard changes to publish."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md "$LEADERBOARD_DATA/leaderboards.json" "$LEADERBOARD_CARDS"/readme-leaderboard-card-*.svg
+          git commit -m "leaderboard: publish scheduled check"
+
+          if git push origin HEAD:main; then
+            exit 0
+          fi
+
+          echo "Push raced; rebasing once and retrying."
+          git pull --rebase origin main
+          git push origin HEAD:main

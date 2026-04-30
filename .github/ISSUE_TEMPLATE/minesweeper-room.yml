@@ -1,0 +1,71 @@
+name: "Minesweeper Room - Start a New Game!"
+description: "Start a new Minesweeper game room"
+title: "Minesweeper Room - Start a New Game!"
+labels:
+  - "game:minesweeper"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **A new Minesweeper room will be created for you.**
+
+        Wait for the bot to create your board, then comment in the thread to make a move.
+
+        You will have **30 minutes** to complete the game.
+
+        Feel free to play again, but **don't open more than one issue at a time.**
+
+        > [!WARNING]
+        > The following behavior may violate the app's rate limit, and can result in a ban, as it presents a risk to the maintainer:
+        > Do **NOT** comment in anyone else's thread.
+        > Do **NOT** comment in your own thread at an aggressive pace - try to just take turns with the bot.
+        > If the bot is not responsive, it probably means the app is being rate-limited - please be patient,
+        > or if nothing is happening, just come back later.
+
+        Repeated violations of these basic rules will result in a single warning. Further violations may result in a ban.
+        The purpose of this is to deter spammers and bots - any ordinary user who makes a mistake is not at risk.
+        But enough about that.
+
+        **Gameplay commands:**
+
+        - **Reveal cells:** `A1` - or: `guess A1`, `reveal A1`
+        - **Flag suspected mines:** `flag H7`
+        - **Remove flags:** `unflag H7`
+        - **End the game:** `giveup`
+
+        <details>
+        <summary>Notes on Gameplay</summary>
+
+        - Commands are **case-insensitive**.
+        - Each line may contain **one command** but **multiple cells**, e.g.:
+          `guess A1 A2 B1 C1`
+        - **Bare coordinates** with no preceding command will be interpreted as `guess`/`reveal` commands, e.g.:
+            - `A1`    <=> `guess A1`
+            - `A1 A2` <=> `guess A1 A2`,
+            - `flag A1 A2` indicates `flag A1` and `flag A2`.
+        - Each comment may contain **multiple commands on different lines**, e.g.:
+          ```
+          A1 A2 B1
+          flag B2 C5
+          A8
+          guess D10
+          ```
+        - Use one action per line.
+        - A comment with multiple commands will be evaluated one command at a time, left to right, top to bottom.
+        - Any unrecognized token invalidates the whole turn.
+        - In this game, flags will be interpreted as _notation-only_ - that is, a flagged cell can still be revealed.
+        - Slash prefixes are optionally supported but are completely **unnecessary** (for example, `/flag A1`).
+        - You do not have to flag all mines in order to solve the game - they are nothing more than "notes to self" - 
+          similarly, the game will end when all mine-free cells are revealed, not when all flags are planted.
+        </details>
+
+  - type: checkboxes
+    id: conduct
+    attributes:
+      label: Code of Conduct
+      description: By participating, you agree to follow our [Code of Conduct](https://github.com/hesreallyhim/github-minesweeper/blob/main/.github/CODE_OF_CONDUCT.md).
+      options:
+        - label: I have read the Code of Conduct and agree to respect the rules and standards of this repository.
+          required: true
+    validations:
+      required: true

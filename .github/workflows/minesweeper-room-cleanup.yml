@@ -1,0 +1,71 @@
+name: Minesweeper Room Cleanup
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+concurrency:
+  group: minesweeper-room-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup-rooms:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Expire and close Minesweeper rooms
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          ACTIVE_LABEL: game:minesweeper
+        shell: bash
+        run: |
+          expire_cutoff="$(date -u -d '30 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')"
+          close_cutoff="$(date -u -d '15 minutes ago' '+%Y-%m-%dT%H:%M:%SZ')"
+
+          echo "Expiring unlocked active rooms created before ${expire_cutoff}."
+          echo "Closing locked active rooms last updated before ${close_cutoff}."
+
+          mapfile -t active_issues < <(
+            gh api --paginate "repos/${REPOSITORY}/issues" \
+              --method GET \
+              -f state=open \
+              -f labels="$ACTIVE_LABEL" \
+              -f per_page=100 \
+              --jq ".[] | select(.locked == false and .created_at < \"${expire_cutoff}\") | .number"
+          )
+
+          for issue in "${active_issues[@]}"; do
+            echo "Expiring and locking active room #${issue}."
+            gh issue comment \
+              --repo "$REPOSITORY" \
+              "$issue" \
+              --body "This Minesweeper room has expired because it has been open for more than 30 minutes. It will remain visible briefly, then be closed automatically."
+
+            gh issue lock \
+              --repo "$REPOSITORY" \
+              "$issue" \
+              --reason resolved || echo "Issue #${issue} may already be locked."
+          done
+
+          mapfile -t close_issues < <(
+            gh api --paginate "repos/${REPOSITORY}/issues" \
+              --method GET \
+              -f state=open \
+              -f labels="$ACTIVE_LABEL" \
+              -f per_page=100 \
+              --jq ".[] | select(.locked == true and .updated_at < \"${close_cutoff}\") | .number"
+          )
+
+          if [ "${#close_issues[@]}" -eq 0 ]; then
+            echo "No locked Minesweeper rooms are old enough to close."
+            exit 0
+          fi
+
+          for issue in "${close_issues[@]}"; do
+            echo "Closing locked room #${issue}."
+            gh issue close --repo "$REPOSITORY" "$issue"
+          done

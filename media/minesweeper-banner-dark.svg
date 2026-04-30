@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320">
+
+<defs>
+  <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#0d1117"/>
+    <stop offset="1" stop-color="#010409"/>
+  </linearGradient>
+
+  <radialGradient id="glow" cx="0.3" cy="0.3" r="0.9">
+    <stop offset="0" stop-color="#39d353" stop-opacity="0.08"/>
+    <stop offset="1" stop-color="#39d353" stop-opacity="0"/>
+  </radialGradient>
+
+  <pattern id="dots" x="0" y="0" width="36" height="36" patternUnits="userSpaceOnUse">
+    <circle cx="1" cy="1" r="1" fill="#30363d" opacity="0.35"/>
+  </pattern>
+
+  <filter id="cellShadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="1.5" stdDeviation="1" flood-color="#000" flood-opacity="0.35"/>
+  </filter>
+
+  <!-- Classic spiked bomb, 40x40 viewbox centered -->
+  <symbol id="bomb" viewBox="-20 -20 40 40" overflow="visible">
+    <g fill="#0d1117">
+      <rect x="-1.8" y="-15" width="3.6" height="5" rx="0.5"/>
+      <rect x="-1.8" y="10" width="3.6" height="5" rx="0.5"/>
+      <rect x="-15" y="-1.8" width="5" height="3.6" rx="0.5"/>
+      <rect x="10" y="-1.8" width="5" height="3.6" rx="0.5"/>
+      <g transform="rotate(45)">
+        <rect x="-1.8" y="-14" width="3.6" height="4.5" rx="0.5"/>
+        <rect x="-1.8" y="9.5" width="3.6" height="4.5" rx="0.5"/>
+        <rect x="-14" y="-1.8" width="4.5" height="3.6" rx="0.5"/>
+        <rect x="9.5" y="-1.8" width="4.5" height="3.6" rx="0.5"/>
+      </g>
+    </g>
+    <circle cx="0" cy="0" r="9.5" fill="#0d1117" stroke="#484f58" stroke-width="0.6"/>
+    <circle cx="-3" cy="-3" r="2.3" fill="#484f58"/>
+    <circle cx="-3.5" cy="-3.5" r="1" fill="#8b949e"/>
+    <path d="M 6.5,-6.5 Q 10,-10 12,-13" stroke="#8b949e" stroke-width="1.6"
+          fill="none" stroke-linecap="round"/>
+    <circle cx="13" cy="-14" r="3" fill="#f85149"/>
+    <circle cx="13" cy="-14" r="1.5" fill="#ffa657"/>
+    <circle cx="13" cy="-14" r="0.6" fill="#f0f6fc"/>
+  </symbol>
+
+  <!-- Lighter bomb for use on dark backgrounds (legend) -->
+  <symbol id="bomb-light" viewBox="-20 -20 40 40" overflow="visible">
+    <g fill="#8b949e">
+      <rect x="-1.8" y="-15" width="3.6" height="5" rx="0.5"/>
+      <rect x="-1.8" y="10" width="3.6" height="5" rx="0.5"/>
+      <rect x="-15" y="-1.8" width="5" height="3.6" rx="0.5"/>
+      <rect x="10" y="-1.8" width="5" height="3.6" rx="0.5"/>
+      <g transform="rotate(45)">
+        <rect x="-1.8" y="-14" width="3.6" height="4.5" rx="0.5"/>
+        <rect x="-1.8" y="9.5" width="3.6" height="4.5" rx="0.5"/>
+        <rect x="-14" y="-1.8" width="4.5" height="3.6" rx="0.5"/>
+        <rect x="9.5" y="-1.8" width="4.5" height="3.6" rx="0.5"/>
+      </g>
+    </g>
+    <circle cx="0" cy="0" r="9.5" fill="#30363d" stroke="#8b949e" stroke-width="0.8"/>
+    <circle cx="-3" cy="-3" r="2.3" fill="#8b949e"/>
+    <circle cx="-3.5" cy="-3.5" r="1" fill="#c9d1d9"/>
+    <path d="M 6.5,-6.5 Q 10,-10 12,-13" stroke="#c9d1d9" stroke-width="1.6"
+          fill="none" stroke-linecap="round"/>
+    <circle cx="13" cy="-14" r="3" fill="#f85149"/>
+    <circle cx="13" cy="-14" r="1.5" fill="#ffa657"/>
+    <circle cx="13" cy="-14" r="0.6" fill="#f0f6fc"/>
+  </symbol>
+
+  <!-- Flag icon, 30x36 viewbox centered -->
+  <symbol id="flag" viewBox="-15 -18 30 36" overflow="visible">
+    <rect x="-0.9" y="-14" width="1.8" height="28" fill="#c9d1d9"/>
+    <rect x="-6" y="11" width="13" height="2" rx="0.5" fill="#8b949e"/>
+    <rect x="-7" y="13" width="15" height="2.5" rx="0.5" fill="#8b949e"/>
+    <path d="M 1,-14 L 12,-7 L 1,0 Z" fill="#f85149"/>
+    <path d="M 1,-14 L 12,-7 L 1,-12 Z" fill="#ff7b72" opacity="0.6"/>
+  </symbol>
+</defs>
+
+  <rect width="1280" height="320" fill="url(#bgGrad)"/>
+  <rect width="1280" height="320" fill="url(#dots)"/>
+
+  <!-- corner accents -->
+  <g stroke="#30363d" stroke-width="1" fill="none" opacity="0.5">
+    <path d="M 20,20 L 20,52 M 20,20 L 52,20"/>
+    <path d="M 1260,20 L 1260,52 M 1260,20 L 1228,20"/>
+    <path d="M 20,300 L 20,268 M 20,300 L 52,300"/>
+    <path d="M 1260,300 L 1260,268 M 1260,300 L 1228,300"/>
+  </g>
+
+  <!-- LEFT: title -->
+  <g transform="translate(60, 115)">
+    <!-- <text y="-82" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">
+      <tspan fill="#8b949e">~/projects</tspan><tspan dx="10" fill="#7ee787">❯</tspan><tspan dx="7" fill="#c9d1d9">gh repo clone</tspan><tspan dx="7" fill="#58a6ff" font-weight="600">github-minesweeper</tspan>
+    </text> -->
+    <text font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif"
+          font-weight="900" font-size="80" fill="#f0f6fc" letter-spacing="-3">GitHub</text>
+    <text y="72" font-family="ui-sans-serif, -apple-system, 'Segoe UI', sans-serif"
+          font-weight="900" font-size="80" fill="#f0f6fc" letter-spacing="-3">Minesweeper</text>
+    <text y="108" font-family="ui-sans-serif, system-ui, sans-serif"
+          font-size="17" fill="#8b949e">
+      The classic game, now in a GitHub repo, where every issue is a minefield.
+    </text>
+
+    <!-- feature pills -->
+    <g transform="translate(0, 124)" font-family="ui-monospace, monospace" font-size="12">
+      <g>
+        <rect width="130" height="28" rx="14" fill="#161b22" stroke="#30363d"/>
+        <circle cx="16" cy="14" r="3.5" fill="#58a6ff"/>
+        <text x="28" y="18" fill="#c9d1d9">start a game</text>
+      </g>
+      <g transform="translate(140, 0)">
+        <rect width="152" height="28" rx="14" fill="#161b22" stroke="#30363d"/>
+        <circle cx="16" cy="14" r="3.5" fill="#f85149"/>
+        <text x="28" y="18" fill="#c9d1d9">avoid the bombs</text>
+      </g>
+      <g transform="translate(302, 0)">
+        <rect width="152" height="28" rx="14" fill="#161b22" stroke="#30363d"/>
+        <circle cx="16" cy="14" r="3.5" fill="#7ee787"/>
+        <text x="28" y="18" fill="#c9d1d9">sweep the board</text>
+      </g>
+    </g>
+
+  </g>
+
+  <!-- RIGHT: board -->
+  <g filter="url(#cellShadow)">
+    <rect x="784" y="74" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="828" y="74" width="40" height="40" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="872" y="74" width="40" height="40" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="916" y="74" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="960" y="74" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/><use href="#flag" x="968.0" y="82.0" width="24" height="24"/>
+<rect x="1004" y="74" width="40" height="40" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1048" y="74" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1092" y="74" width="40" height="40" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1136" y="74" width="40" height="40" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1180" y="74" width="40" height="40" rx="5" fill="#39d353" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="784" y="118" width="40" height="40" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="828" y="118" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="872" y="118" width="40" height="40" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="892.0" y="145.7" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="22" fill="#58a6ff">1</text>
+<rect x="916" y="118" width="40" height="40" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="936.0" y="145.7" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="22" fill="#7ee787">2</text>
+<rect x="960" y="118" width="40" height="40" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1004" y="118" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1048" y="118" width="40" height="40" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="1068.0" y="145.7" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="22" fill="#58a6ff">1</text>
+<rect x="1092" y="118" width="40" height="40" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/><use href="#flag" x="1100.0" y="126.0" width="24" height="24"/>
+<rect x="1136" y="118" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1180" y="118" width="40" height="40" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="784" y="162" width="40" height="40" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="828" y="162" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="872" y="162" width="40" height="40" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="892.0" y="189.7" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="22" fill="#58a6ff">1</text>
+<rect x="916" y="162" width="40" height="40" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="960" y="162" width="40" height="40" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="980.0" y="189.7" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="22" fill="#58a6ff">1</text>
+<rect x="1004" y="162" width="40" height="40" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="1024.0" y="189.7" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="22" fill="#58a6ff">1</text>
+<rect x="1048" y="162" width="40" height="40" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/>
+<rect x="1092" y="162" width="40" height="40" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="1112.0" y="189.7" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="22" fill="#58a6ff">1</text>
+<rect x="1136" y="162" width="40" height="40" rx="5" fill="#1c2128" stroke="#262c36" stroke-width="1"/><text x="1156.0" y="189.7" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="800" font-size="22" fill="#7ee787">2</text>
+<rect x="1180" y="162" width="40" height="40" rx="5" fill="#39d353" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="784" y="206" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="828" y="206" width="40" height="40" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="872" y="206" width="40" height="40" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="916" y="206" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="960" y="206" width="40" height="40" rx="5" fill="#39d353" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1004" y="206" width="40" height="40" rx="5" fill="#0e4429" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1048" y="206" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1092" y="206" width="40" height="40" rx="5" fill="#3d1416" stroke="#f85149" stroke-width="1.5"/><use href="#bomb" x="1098.0" y="212.0" width="28" height="28"/>
+<rect x="1136" y="206" width="40" height="40" rx="5" fill="#006d32" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+<rect x="1180" y="206" width="40" height="40" rx="5" fill="#26a641" stroke="#000" stroke-opacity="0.25" stroke-width="0.5"/>
+  </g>
+
+  <!-- cursor hovering over a cell -->
+  <g transform="translate(1078, 96)">
+    <path d="M 0,0 L 0,16 L 4,12 L 7,18 L 10,17 L 7,11 L 12,11 Z"
+          fill="#f0f6fc" stroke="#0d1117" stroke-width="1.2" stroke-linejoin="round"/>
+  </g>
+</svg>
