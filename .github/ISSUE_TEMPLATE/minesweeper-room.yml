@@ -15,6 +15,14 @@ body:
 
         Feel free to play again, but **don't open more than one issue at a time.**
 
+        > [!Alert] **WARNING:** The following behavior may trigger GitHub's rate-limit abuse detection, and can result in a ban, as it presents a risk to the maintainer:
+        > - Do **NOT** comment in anyone else's thread.
+        > - Do **NOT** comment in your own thread at an aggressive pace - try to just take turns with the bot.
+        >   If the bot is not responsive, it probably means the app is being rate-limited - please be patient,
+        >   or if nothing is happening, just come back later.
+
+        Repeated violations of these basic rules will result in a single warning. Further violations will result in a ban. But enough about that.
+
         **Gameplay commands:**
 
         - **Reveal cells:** `A1` - or: `guess A1`, `reveal A1`
@@ -28,7 +36,7 @@ body:
         - Commands are **case-insensitive**.
         - Each line may contain **one command** but **multiple cells**, e.g.:
           `guess A1 A2 B1 C1`
-        - **Bare coordinates** with no preceding command will be interpreted as `guess` commands, e.g.:
+        - **Bare coordinates** with no preceding command will be interpreted as `guess`/`reveal` commands, e.g.:
             - `A1`    <=> `guess A1`
             - `A1 A2` <=> `guess A1 A2`,
             - `flag A1 A2` indicates `flag A1` and `flag A2`.
@@ -40,16 +48,13 @@ body:
           guess D10
           ```
         - Use one action per line.
+        - A comment with multiple commmands will be evaluated one command at a time, left to right, top to bottom.
         - Any unrecognized token invalidates the whole turn.
-        - Contradictory commands (e.g. `guess A1` and `flag A1` on two lines) will
-          invalidate the whole turn.
-        - Slash prefixes are optional but **unnecessary** (for example, `/flag A1`).
-        - You do not have to flag all mines in order to solve the game.
+        - In this game, flags will be interpreted as _notation-only_ - that is, a flagged cell can stll be revealed.
+        - Slash prefixes are optionally supported but are completely **unnecessary** (for example, `/flag A1`).
+        - You do not have to flag all mines in order to solve the game - they are nothing more that "notes to self" - 
+          similarly, the game will end when all mine-free cells are revealed, not when all flags are planted.
         </details>
-
-        Only you (the issue opener) can play in this room. Other users' comments will not
-        affect the game - however, excessive comments, even by the issue owner, will be
-        considered potential spam.
 
   - type: checkboxes
     id: conduct
