@@ -90,7 +90,7 @@ In order to keep track of things, once you figure out that a certain cell must c
 
 <!-- MS_LEADERBOARD_START -->
 ### Leaderboards
-_Last checked (UTC): 2026-04-30T12:42:35+00:00 from 0 completed games_
+_Last checked (UTC): 2026-04-30T13:17:19+00:00 from 0 completed games_
 
 (Leaderboards update every 15 minutes)
 
